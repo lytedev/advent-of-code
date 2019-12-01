@@ -9,8 +9,8 @@ read_whole_file = =>
 input_for_day = =>
 		read_whole_file "input/#{@}.txt"
 
-reduce = (iterable, initial, f) ->
+reduce = (initial, f) =>
 	acc = initial
-	for e in iterable
+	for e in @
 		acc = f acc, e
 	acc

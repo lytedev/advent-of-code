@@ -1,6 +1,7 @@
 -- https://adventofcode.com/2019/day/1
 
 require "common"
+
 input = -> input_for_day(1)\gmatch "%d+"
 
 mass_to_fuel = => -2 + math.floor @ / 3
