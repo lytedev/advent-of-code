@@ -1,4 +1,4 @@
-import streams, strutils, sequtils, re, options
+import streams, strutils, re
 
 type PasswordPolicy = tuple[min: int, max: int, keyChar: char]
 

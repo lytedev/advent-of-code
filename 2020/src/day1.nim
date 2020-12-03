@@ -1,4 +1,4 @@
-import sets, streams, strutils, options, input_helpers
+import sets, streams, strutils, input_helpers
 
 # Day 1
 
