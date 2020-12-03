@@ -20,13 +20,11 @@ iterator asPasswordPolicies(s: Stream): (PasswordPolicy, string) =
     yield parsePasswordPolicy line
 
 proc part1*(s: Stream): int =
-  result = 0
   for (pp, pw) in asPasswordPolicies(s):
     if isValidPassword(pw, pp):
       result += 1
 
 proc part2*(s: Stream): int =
-  result = 0
   for (pp, pw) in asPasswordPolicies(s):
     if isValidPasswordPart2(pw, pp):
       result += 1

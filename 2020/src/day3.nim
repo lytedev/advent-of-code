@@ -1,10 +1,7 @@
 import streams
 
 proc sled(s: Stream, velx: int, vely: int): int =
-  setPosition(s, 0)
-  result = 0
-  var xpos = 0
-  var ypos = 0
+  var xpos, ypos: int
   for line in s.lines():
     ypos += 1
     if (ypos - 1) mod vely > 0:
@@ -19,5 +16,6 @@ proc part1*(s: Stream): int =
 proc part2*(s: Stream): int =
   result = part1(s)
   for vels in [(1, 1), (5, 1), (7, 1), (1, 2)]:
+    setPosition(s, 0)
     let (velx, vely) = vels
     result *= sled(s, velx, vely)
