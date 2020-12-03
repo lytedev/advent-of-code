@@ -10,7 +10,7 @@ macro loadDays(): untyped =
       # TODO: do I "need" to close these streams?
       solver_str = solver_str & &"""
       {day}: proc(): tuple[part1: int, part2: int] =
-        echo "Day {day}"
+        stdout.write "Day {day}: "
         (
           {module}.part1(getInputFileStreamForDay({day})),
           {module}.part2(getInputFileStreamForDay({day}))

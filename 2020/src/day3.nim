@@ -3,15 +3,12 @@ import streams
 proc sled(s: Stream, velx: int, vely: int): int =
   var xpos, ypos: int
   for line in s.lines():
-    ypos += 1
-    if (ypos - 1) mod vely > 0:
-      continue
-    if line[xpos mod line.len()] == '#':
-      result += 1
+    inc ypos
+    if (ypos - 1) mod vely > 0: continue
+    if line[xpos mod line.len()] == '#': inc result
     xpos += velx
 
-proc part1*(s: Stream): int =
-  sled(s, 3, 1)
+proc part1*(s: Stream): int = sled(s, 3, 1)
 
 proc part2*(s: Stream): int =
   result = part1(s)

@@ -1,29 +1,19 @@
-import sets, streams, strutils, input_helpers
+import sets, streams, input_helpers, sequtils, options
 
-# Day 1
+let targetSum = 2020
 
-let day1TargetSum = 2020
+proc findComplement(nums: seq[int], complement = targetSum): Option[(int, int)] =
+  var targets = initHashSet[int]()
+  for n in nums:
+    if targets.contains(complement - n): return some(((complement - n), n))
+    else: targets.incl n
 
 proc part1*(s: Stream): int =
-  var targets = initHashSet[int]()
-  for n in asInts(s):
-    if targets.contains(day1TargetSum - n):
-      return (day1TargetSum - n) * n
-    else:
-      targets.incl n
+  let (n1, n2) = findComplement(toSeq(asInts(s))).get; n1 * n2
 
-proc part2*(strm: Stream): int =
-  # this works exactly the same as the previous algorithm, except we simply
-  # permute once more
-  # TODO: if I was really cool, I could split the shared functionality into
-  # a shared proc
-  var nums: seq[int]
-  for line in strm.lines():
-    nums.add parseInt line
+proc part2*(s: Stream): int =
+  let nums = toSeq(asInts(s))
   for n in nums:
-    var iset = initHashSet[int]()
-    let nTargetSum = day1TargetSum - n
-    for n2 in nums:
-      if iset.contains(nTargetSum - n2):
-        return n * n2 * (nTargetSum - n2)
-      iset.incl n2
+    let comp = findComplement(nums, targetSum - n)
+    if comp.isSome:
+      let (n1, n2) = comp.get; return n * n1 * n2
