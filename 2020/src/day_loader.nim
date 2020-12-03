@@ -7,6 +7,7 @@ macro loadDays(): untyped =
     let module = fmt"day{day}"
     if fileExists joinPath("src/", &"{module}.nim"):
       result.add parseStmt fmt"from {module} import nil"
+      # TODO: do I "need" to close these streams?
       solver_str = solver_str & &"""
       {day}: proc(): tuple[part1: int, part2: int] =
         echo "Day {day}"
