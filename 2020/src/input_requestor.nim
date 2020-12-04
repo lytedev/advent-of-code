@@ -14,8 +14,7 @@ proc requestAocContentAuthed(url: string): TaintedString =
   let cookie = getEnv("ADVENT_OF_CODE_AUTH_COOKIE", readFile(expandTilde("~/.advent-of-code-auth-cookie")))
   let client = newHttpClient()
   client.headers = newHttpHeaders({"cookie": cookie})
-  # client.getContent(url)
-  ""
+  client.getContent(url)
 
 proc getInputFileStreamForDay*(day: int): FileStream =
   # retrieve the input and dump it to a file if we don't have it yet
