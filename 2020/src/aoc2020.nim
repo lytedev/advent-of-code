@@ -8,4 +8,5 @@ proc solve_for_day(n: int) {.used.} =
   echo solvers[n]()
 
 when isMainModule:
-  solve_all()
+  # solve_all()
+  solve_for_day(4)

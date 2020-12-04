@@ -5,7 +5,7 @@ var consoleLog = newConsoleLogger()
 addHandler(consoleLog)
 addHandler(fileLog)
 
-let cacheDir = joinPath(getEnv("XDG_CACHE_HOME", expandTilde("~/.cache")), "/aoc2020-cache")
+let cacheDir = joinPath(getEnv("XDG_CACHE_HOME", expandTilde("~/.cache")), "/aoc2020")
 createDir(cacheDir)
 
 # TODO: add login capabilities via `pass` for auto-cookie-retrieval?
@@ -14,7 +14,8 @@ proc requestAocContentAuthed(url: string): TaintedString =
   let cookie = getEnv("ADVENT_OF_CODE_AUTH_COOKIE", readFile(expandTilde("~/.advent-of-code-auth-cookie")))
   let client = newHttpClient()
   client.headers = newHttpHeaders({"cookie": cookie})
-  client.getContent(url)
+  # client.getContent(url)
+  ""
 
 proc getInputFileStreamForDay*(day: int): FileStream =
   # retrieve the input and dump it to a file if we don't have it yet
