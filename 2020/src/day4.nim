@@ -1,15 +1,23 @@
 import streams, strutils, sets, sequtils, sugar, re, tables
 
+let regexes = toTable({
+  "hcl": re"^#[0-9a-f]{6}$",
+  "ecl": re"^(amb|blu|brn|gry|grn|hzl|oth)$",
+  "pid": re"^\d{9}$",
+  "hgt": re"^\d+(cm|in)$",
+  "nondec": re"[^0-9]",
+})
+
 let validators = toTable({
-  "hcl": (v: string) => v.match re"^#[0-9a-f]{6}$",
-  "ecl": (v: string) => v.match re"^(amb|blu|brn|gry|grn|hzl|oth)$",
-  "pid": (v: string) => v.match re"^\d{9}$",
+  "hcl": (v: string) => v.match regexes["hcl"],
+  "ecl": (v: string) => v.match regexes["ecl"],
+  "pid": (v: string) => v.match regexes["pid"],
   "byr": (v: string) => parseInt(v) in 1920..2002,
   "iyr": (v: string) => parseInt(v) in 2010..2020,
   "eyr": (v: string) => parseInt(v) in 2020..2030,
   "hgt": proc (v: string): bool =
     let (mn, mx) = if v.endsWith("cm"): (150, 193) else: (59, 76)
-    v.match(re"^\d+(cm|in)$") and v.replace(re"[^0-9]").parseInt in mn..mx,
+    v.match(regexes["hgt"]) and v.replace(regexes["nondec"]).parseInt in mn..mx,
   "cid": (v: string) => true,
 })
 
