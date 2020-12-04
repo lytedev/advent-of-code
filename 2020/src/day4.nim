@@ -18,7 +18,7 @@ proc parsePassports(s: Stream): seq[Table[string, string]] =
     .filterIt(it != "").mapIt(it.split(':', 2)).mapIt((it[0], it[1])).toTable)
 
 proc hasRequiredFields(p: Table[string, string]): bool =
-  toSeq(validators.keys).toHashSet.difference(["cid"].toHashSet) <= toSeq(p.keys).toHashSet
+  (toSeq(validators.keys).toHashSet - ["cid"].toHashSet) <= toSeq(p.keys).toHashSet
 
 proc part1*(s: Stream): int =
   s.parsePassports.countIt(it.hasRequiredFields)
