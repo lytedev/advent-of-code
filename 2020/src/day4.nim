@@ -21,8 +21,7 @@ proc hasRequiredFields(p: Table[string, string]): bool =
   toSeq(validators.keys).toHashSet.difference(["cid"].toHashSet) <= toSeq(p.keys).toHashSet
 
 proc part1*(s: Stream): int =
-  s.parsePassports.filterIt(it.hasRequiredFields).len
+  s.parsePassports.countIt(it.hasRequiredFields)
 
 proc part2*(s: Stream): int =
-  s.parsePassports.filterIt(it.hasRequiredFields and
-    toSeq(it.pairs).mapIt(validators[it[0]](it[1])).foldl(a and b)).len
+  s.parsePassports.countIt(it.hasRequiredFields and toSeq(it.pairs).allIt(validators[it[0]](it[1])))
