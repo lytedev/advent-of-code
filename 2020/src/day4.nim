@@ -13,7 +13,7 @@ let nonDecimal = re"[^0-9]"
 let hgt = re"\d+(cm|in)"
 let hcl = re"#[0-9a-f]{6}"
 let ecl = re"(amb|blu|brn|gry|grn|hzl|oth)"
-let pid = re"\d{9}"
+let pid = re"^\d{9}$"
 
 let validators = {
   "hgt": (v: string) =>
@@ -51,5 +51,4 @@ proc part1*(s: Stream): int =
   toSeq(s.asPassports).filterIt(it.hasRequiredFields).len
 
 proc part2*(s: Stream): int =
-  # TODO: off-by-one error?
-  toSeq(s.asPassports).filterIt(it.hasRequiredFields and it.isValid).len - 1
+  toSeq(s.asPassports).filterIt(it.hasRequiredFields and it.isValid).len
