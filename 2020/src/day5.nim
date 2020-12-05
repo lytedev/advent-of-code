@@ -25,6 +25,6 @@ proc part2*(s: Stream): int =
   for l in s.lines():
     let id = cast[int](toId(row(l[0 .. 6]), col(l[7 .. ^1])))
     ids.incl(id)
-  for i in 1..890:
+  for i in 1..890: # 890 is my answer from part 1
     if ids.contains(i+1) and ids.contains(i-1) and not ids.contains(i):
       return i
