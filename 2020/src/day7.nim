@@ -7,6 +7,7 @@ nc <- {\d} ' ' c ' bag' 's'? ', '?
 c <- {\ident ' ' \ident}
 """
 
+let target = "shiny gold"
 iterator asParsed(s: Stream): (string, seq[string]) =
   for l in s.lines:
     if l =~ parser:
@@ -17,10 +18,8 @@ iterator asParsed(s: Stream): (string, seq[string]) =
 proc walkUp(t: TableRef[string, HashSet[string]], tar: string): HashSet[string] =
   if t.contains(tar):
     let parents = t[tar]
-    echo parents
     result = parents
     for p in parents:
-      echo p
       result = result + t.walkUp(p)
 
 proc part1*(s: Stream): int =
@@ -30,7 +29,7 @@ proc part1*(s: Stream): int =
     for p in parents:
       if t.contains(p): t[p].incl(key)
       else: t[p] = [key].toHashSet()
-  t.walkUp("shiny gold").len
+  t.walkUp(target).len
 
 proc walkDown(t: TableRef[string, TableRef[string, int]], tar: string): int =
   let children = t[tar]
@@ -43,9 +42,8 @@ iterator asPairChunks(s: seq[string]): (string, int) =
 proc part2*(s: Stream): int =
   var t = newTable[string, TableRef[string, int]]()
   for (key, parsed) in s.asParsed:
-    echo key, parsed
     var innert = newTable[string, int]()
     for (innerkey, n) in parsed.asPairChunks:
       innert[innerkey] = n
     t[key] = innert
-  t.walkDown "shiny gold"
+  t.walkDown target
