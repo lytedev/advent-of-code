@@ -4,7 +4,6 @@ let targetSum = 2020
 
 proc findComplement*(nums: openArray[int], complement = targetSum): Option[(int, int)] =
   var targets = initHashSet[int]()
-  echo nums
   for n in nums:
     if targets.contains(complement - n): return some(((complement - n), n))
     else: targets.incl n

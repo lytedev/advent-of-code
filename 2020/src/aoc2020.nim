@@ -9,5 +9,4 @@ proc solve_for_day(n: int) {.used.} =
 
 when isMainModule:
   # solve_all()
-  # solve_for_day(1)
-  solve_for_day(9)
+  solve_for_day(10)

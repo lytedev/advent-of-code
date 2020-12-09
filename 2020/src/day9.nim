@@ -5,11 +5,11 @@ const WINDOW = 25
 proc part1*(s: Stream): int =
   var rollingWindow = initDeque[int](WINDOW)
   for i in s.asInts:
-    echo i
     if rollingWindow.len < WINDOW:
       rollingWindow.addFirst(i)
       continue
     else:
+      # TODO: this toSeq every iteration is probably nasty
       let maybe = toSeq(rollingWindow).findComplement(i)
       if maybe.isSome:
         rollingWindow.addFirst(i)
@@ -24,11 +24,9 @@ proc part2*(s: Stream): int =
     var mn = n
     var mx = 0
     var sum = nums[i]
-    echo i, " i: ", nums[i]
     mn = min(nums[i], mn)
     mx = max(nums[i], mx)
     for j in i+1..<nums.len:
-      echo j, " j: ", nums[j], " -- ", sum
       mn = min(nums[j], mn)
       mx = max(nums[j], mx)
       if sum == n: return mn+mx
