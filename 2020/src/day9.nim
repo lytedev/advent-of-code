@@ -1,4 +1,4 @@
-import streams, sequtils, sets, options, deques, input_helpers, day1
+import streams, sequtils, options, deques, input_helpers, day1
 
 const WINDOW = 25
 
