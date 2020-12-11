@@ -4,8 +4,8 @@ type
   Seat = enum Floor, Empty, Occupied
   Grid[T] = seq[seq[T]]
 
-proc row[T](g: Grid[T], y: int): seq[T] = g[y]
-proc at[T](g: Grid[T], x: int, y: int): T = g.row(y)[x]
+template row[T](g: Grid[T], y: int): seq[T] = g[y]
+template at[T](g: Grid[T], x: int, y: int): T = g.row(y)[x]
 
 proc toSeat(c: char): Seat =
   case c
@@ -22,12 +22,11 @@ proc getAdjacent(g: Grid[Seat], x: int, y: int): seq[Seat] =
       if sy >= 0 and sx >= 0 and sy < g.len and sx < g.row(sy).len:
         result.add g.at(sx, sy)
 
-proc stepGrid(g: Grid[Seat]): Grid[Seat] =
+proc stepGrid(g: Grid[Seat], ng: var Grid[Seat]) =
   for y in 0..<g.len:
-    result.add @[]
     for x in 0..<g.row(y).len:
       let adj = getAdjacent(g, x, y)
-      result[y].add case g.at(x, y)
+      ng[y][x] = case g.at(x, y)
         of Floor: Floor
         of Empty:
           if adj.countIt(it == Occupied) == 0:
@@ -42,17 +41,16 @@ proc stepGrid(g: Grid[Seat]): Grid[Seat] =
 
 proc part1*(s: Stream): int =
   # TODO: part1 has tons of allocating - needs cleaning up
-  return 0
   var g = s.asGrid
-  var ng: Grid[Seat]
+  var ng = Floor.repeat(g.row(0).len).repeat(g.len)
   while g != ng:
-    ng = g
-    g = g.stepGrid
+    g.stepGrid(ng)
+    swap g, ng
   g.foldl(a.concat b).countIt(it == Occupied)
 
 type
   SightSeat = (Seat, seq[tuple[x: int, y: int]])
-  SightGrid = seq[seq[SightSeat]]
+  SightGrid = Grid[SightSeat]
 
 proc inBounds(g: Grid, x: int, y: int): bool =
   x >= 0 and y >= 0 and y < g.len and x < g.row(y).len
@@ -66,13 +64,13 @@ proc toSightSeat(g: Grid[Seat], x: int, y: int): SightSeat =
       var tx = x + vx
       var ty = y + vy
       while g.inBounds(tx, ty) and g.at(tx, ty) == Floor:
-        echo "Still...", tx, ty
         tx += vx
         ty += vy
       if g.inBounds(tx, ty): result[1].add (x: tx, y: ty)
+  echo (x, y, result)
 
 proc asSightGrid(s: Stream): SightGrid =
-  let g = s.asGrid
+  let g = s.asGrid()
   for y in 0..<g.len:
     result.add @[]
     for x in 0..<g.row(y).len:
@@ -83,7 +81,6 @@ proc getSightAdjacent(g: Grid[SightSeat], x: int, y: int): seq[Seat] =
     result.add g.at(tx, ty)[0]
 
 proc stepSightGrid(g: Grid[SightSeat]): Grid[SightSeat] =
-  echo "Step..."
   for y in 0..<g.len:
     result.add @[]
     for x in 0..<g.row(y).len:
@@ -97,7 +94,7 @@ proc stepSightGrid(g: Grid[SightSeat]): Grid[SightSeat] =
           else:
             Empty
         of Occupied:
-          if adj.countIt(it == Occupied) >= 6:
+          if adj.countIt(it == Occupied) >= 5:
             Empty
           else:
             Occupied
@@ -107,7 +104,10 @@ proc part2*(s: Stream): int =
   # TODO: part2 has tons of allocating - needs cleaning up
   var g = s.asSightGrid
   var ng: Grid[SightSeat]
+  var steps = 0
   while g != ng:
+    echo "Step ", steps
     ng = g
     g = g.stepSightGrid
+    inc steps
   g.foldl(a.concat b).countIt(it[0] == Occupied)
