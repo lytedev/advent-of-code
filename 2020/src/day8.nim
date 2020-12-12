@@ -54,7 +54,7 @@ proc flipped(h: var HandheldState): HandheldState =
 proc altHandheld(h: var HandheldState): Option[HandheldState] =
   case h.bootcode[h.pointer].instruction:
     of acc: return none(HandheldState)
-    of jmp, nop: some(h.flipped)
+    of jmp, nop: return some(h.flipped)
 
 proc part2*(s: Stream): int =
   var alts = initTable[int, HandheldState]()
