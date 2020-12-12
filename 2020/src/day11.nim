@@ -56,7 +56,7 @@ proc inBounds(g: Grid, x: int, y: int): bool =
   x >= 0 and y >= 0 and y < g.len and x < g.row(y).len
 
 proc toSightSeat(g: Grid[Seat], x: int, y: int): SightSeat =
-  echo "toSightSeat"
+  #echo "toSightSeat"
   result[0] = g.at(x, y)
   for vy in -1..1:
     for vx in -1..1:
@@ -67,7 +67,7 @@ proc toSightSeat(g: Grid[Seat], x: int, y: int): SightSeat =
         tx += vx
         ty += vy
       if g.inBounds(tx, ty): result[1].add (x: tx, y: ty)
-  echo (x, y, result)
+  #echo (x, y, result)
 
 proc asSightGrid(s: Stream): SightGrid =
   let g = s.asGrid()
@@ -106,7 +106,7 @@ proc part2*(s: Stream): int =
   var ng: Grid[SightSeat]
   var steps = 0
   while g != ng:
-    echo "Step ", steps
+    #echo "Step ", steps
     ng = g
     g = g.stepSightGrid
     inc steps
