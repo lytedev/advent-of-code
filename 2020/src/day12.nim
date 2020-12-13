@@ -1,4 +1,4 @@
-import streams, sequtils, strutils, tables
+import streams, strutils, tables
 
 type Dir = enum north, east, south, west
 
@@ -40,7 +40,6 @@ proc part2*(s: Stream): int =
   var p = (0, 0)
   var wp = (10, -1)
   for l in s.lines:
-    echo (d, p, wp, l)
     let arg = l[1..^1].parseInt
     case l[0]:
       of 'N': wp = wp.move(dirMap[north], arg)
@@ -50,7 +49,6 @@ proc part2*(s: Stream): int =
       of 'L': wp = wp.left(arg div 90)
       of 'R': wp = wp.right(arg div 90)
       else: p = p.move(wp, arg)
-  echo (d, p, wp)
   p[0].abs + p[1].abs
 
 doAssert "F10\nN3\nF7\nR90\nF11".newStringStream.part2 == 286
