@@ -22,6 +22,7 @@ proc part2*(s: Stream): int =
   var i = 0
   while true:
     # TODO: this takes too long, need to learn the math?
+    # maybe between each bus there is a regular period of these "coincidences" and we can reduce along those?
     for j in 1..<ss.len:
       if bb.contains j:
         let d = i+j
