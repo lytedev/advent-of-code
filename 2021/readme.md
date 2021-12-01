@@ -12,6 +12,12 @@ Specifically, here's my `deno --version` output:
 
 Enjoy!
 
+## Usage
+
+Run these solutions like so:
+
+    deno run --unstable --allow-all $DAY.ts
+
 # Days
 
 - [x] [Day 1](./1.ts)
