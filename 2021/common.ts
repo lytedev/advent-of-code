@@ -50,6 +50,9 @@ async function fileLines(
   return readLines(await Deno.open(filePath));
 }
 
+/** Returns an generator that will yield lines of input for the given Advent of
+ * Code 2021 day.
+ */
 export async function inputLines(
   day: string,
 ): Promise<AsyncIterableIterator<string>> {
@@ -65,6 +68,9 @@ async function* readStringsAsNumbers(
   }
 }
 
+/** Returns an generator that will yield lines of input parsed as integers for
+ * the given Advent of Code 2021 day.
+ */
 export async function inputNumbers(
   day: string,
 ): Promise<AsyncIterableIterator<number>> {
