@@ -12,5 +12,9 @@ Specifically, here's my `deno --version` output:
 
 Enjoy!
 
+# Days
+
+- [x] [Day 1](./1.ts)
+
 [deno]: https://deno.land/
 [ts]: https://deno.land/manual/typescript
