@@ -34,17 +34,13 @@ export async function part2(
   windowSize = 3,
 ): Promise<number> {
   let increases = 0;
-  // TODO: use a proper FIFO queue data structure for this?
-  let window: number[] = await Promise.all(Array.from(
+  const window: number[] = await Promise.all(Array.from(
     Array(windowSize),
     async (_x, _i) => parseInt((await input.next()).value),
   ));
 
   for await (const depth of input) {
-    if (depth > window[0]) increases++;
-    // TODO: if this was a proper queue, we could just push it on the queue and
-    // expect the first-in value to fall out
-    window = window.slice(1);
+    if (depth > (window.shift() as number)) increases++;
     window.push(depth);
   }
   return increases;
