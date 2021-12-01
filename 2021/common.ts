@@ -76,3 +76,11 @@ export async function inputNumbers(
 ): Promise<AsyncIterableIterator<number>> {
   return readStringsAsNumbers(await inputLines(day));
 }
+
+export async function* asyncIterator<T>(
+  array: T[],
+): AsyncIterableIterator<T> {
+  for (const v of array) {
+    yield v;
+  }
+}
