@@ -50,4 +50,3 @@ when not defined(release):
     ]
     doAssert testInput.submarineCommands() == 150
     doAssert testInput.submarineCommandsWithAim() == 900
-
