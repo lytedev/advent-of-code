@@ -4,7 +4,7 @@ import ./common
 type SubmarineCommand = enum
   Forward, Up, Down
 
-proc parseArg(c: char): int = c.int() - 48
+proc parseArg(c: char): int = c.int() - int('0')
 
 proc parseSubmarineCommand(l: string): (SubmarineCommand, int) =
   case l[0]:
