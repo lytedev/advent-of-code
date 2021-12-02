@@ -5,7 +5,6 @@ export const XDG_CACHE_HOME = Deno.env.get("XDG_CACHE_HOME") ||
   path.join(HOME, ".config");
 
 const INPUT_CACHE_DIR = path.join(XDG_CACHE_HOME, "aoc2021");
-console.log(INPUT_CACHE_DIR);
 
 async function fileExists(filePath: string) {
   try {
@@ -96,7 +95,7 @@ export async function preloadedAsyncIterator<T>(
   return asyncIterator(arr);
 }
 
-export async function measureDuration(cb: () => Promise<void>) {
+export async function measureDuration(cb: () => Promise<void> | void) {
   const p1t = window.performance.now();
   await cb();
   const p1t2 = window.performance.now();
