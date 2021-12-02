@@ -20,7 +20,26 @@ export function part1(input: string[]): number {
 await measureDuration(() => console.log("Part 1", part1(input)));
 
 export function part2(input: string[]): number {
-  return 0;
+  let x = 0;
+  let y = 0;
+  let aim = 0;
+  for (const line of input) {
+    console.log(line);
+    if (line.startsWith("forward ")) {
+      const arg = parseInt(line.substr(8));
+      x += arg;
+      y += aim * arg;
+    } else if (line.startsWith("up ")) {
+      const arg = parseInt(line.substr(3));
+      aim -= arg;
+      // y -= arg;
+    } else if (line.startsWith("down ")) {
+      const arg = parseInt(line.substr(5));
+      aim += arg;
+      // y += arg;
+    }
+  }
+  return x * y;
 }
 
 await measureDuration(() => console.log("Part 2", part2(input)));
