@@ -1,31 +1,15 @@
-import std/[streams, strutils, sugar, strformat, times]
+import ./common
 
-iterator inputForDay(day: int): int =
-  var stream: FileStream = fmt"/home/daniel/.home/.config/aoc2021/{day}.input".openFileStream
-  for s in stream.lines():
-    yield s.parseInt
-
-proc part1(inputs: seq[int], dist=1): int =
-  result = 0
-  var i = dist
-  var x = inputs.len()-1
-  while i <= x:
+proc countDepthIncreases(inputs: seq[int], dist=1): int  =
+  for i in dist..<inputs.len():
     if inputs[i] > inputs[i-dist]: inc result
-    inc i
 
-let dd1 = epochTime()
-var input = collect(newSeq):
-  for i in inputForDay(1): i
+let input = 1.loadInput().toInts()
+time("countDepthIncreases part 1"): echo input.countDepthIncreases()
+time("countDepthIncreases part 2"): echo input.countDepthIncreases(3)
 
-let dd2 = epochTime()
-echo &"{(dd2 - dd1) * 1000} ms (to load input)"
-echo "Part 1"
-let d1 = epochTime()
-echo part1(input)
-let d2 = epochTime()
-echo &"{(d2 - d1) * 1000} ms (to calculate solution)"
-echo "Part 2"
-let d21 = epochTime()
-echo part1(input,3)
-let d22 = epochTime()
-echo &"{(d22 - d21) * 1000} ms (to calculate solution)"
+when not defined(release):
+  static:
+    let testInputs = @[199, 200, 208, 210, 200, 207, 240, 269, 260, 263]
+    doAssert testInputs.countDepthIncreases() == 7
+    doAssert testInputs.countDepthIncreases(3) == 5

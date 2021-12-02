@@ -12,16 +12,34 @@ Specifically, here's my `deno --version` output:
 
 Enjoy!
 
+**EDIT**: Since performance is not what I would like, it looks like I'm also doing some of these in nim.
+
 ## Usage
 
 Run these solutions like so:
 
     deno run --unstable --allow-all $DAY.ts
 
+And the nim ones like so:
+
+    nim c -d:release -d:ssl --run $DAYMODULE.nim
+
+And if you want to measure memory usage:
+
+    mkdir -p build
+    deno compile --output build/$DAY --unstable --allow-all $DAY.ts
+    /usr/bin/time -v ./build/$DAY
+
+Or
+
+    mkdir -p build
+    nim c -d:release -d:ssl --outdir:build $DAYMODULE.nim
+    /usr/bin/time -v ./$DAYMODULE
+
 # Days
 
 - [x] [Day 1](./1.ts)
-- [ ] Day 2
+- [x] [Day 2](./2.ts)
 - [ ] Day 3
 - [ ] Day 4
 - [ ] Day 5
