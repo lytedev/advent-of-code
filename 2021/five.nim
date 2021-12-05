@@ -18,10 +18,25 @@ proc part1(inputLines: seq[string]): int =
       inc result
 
 proc part2(inputLines: seq[string]): int =
-  return 0
+  var points: CountTable[(int, int)] = initCountTable[(int, int)](1000)
+  for l in inputLines:
+    let (x1, y1, x2, y2) = l.toPointPair()
+    let ang = arctan2(float(y2 - y1), float(x2 - x1)) * 180 / PI
+    echo ang
+    if x1 == x2 or y1 == y2 or (ang.abs() mod 90) == 45.0:
+      for x in min(x1, x2)..max(x1, x2):
+        for y in min(y1, y2)..max(y1, y2):
+          echo &"{x} {y}"
+          points.inc((x, y))
+  for p in points.values():
+    echo p
+    if p >= 2:
+      inc result
+  echo result
+  echo points, points.len()
 
 let input = 5.loadInput()
-time("day 5 part 1"): echo input.part1()
+# time("day 5 part 1"): echo input.part1()
 # time("day 5 part 2"): echo input.part2()
 
 when not defined(release):
@@ -35,5 +50,5 @@ when not defined(release):
 3,4 -> 1,4
 0,0 -> 8,8
 5,5 -> 8,2""".split('\n')
-  doAssert testInput.part1() == 5
-  doAssert testInput.part2() == 0
+  # doAssert testInput.part1() == 5
+  doAssert testInput.part2() == 12
