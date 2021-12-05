@@ -10,21 +10,18 @@ proc part1(inputLines: seq[string]): int =
   for l in inputLines:
     let (x1, y1, x2, y2) = l.toPointPair()
     if x1 == x2 or y1 == y2:
-      echo &"{x1} {y1} -> {x2} {y2}"
-      for x in x1..x2:
-        for y in y1..y2:
+      for x in min(x1, x2)..max(x1, x2):
+        for y in min(y1, y2)..max(y1, y2):
           points.inc((x, y))
-          echo &"{x} {y}"
   for p in points.values():
     if p >= 2:
-      echo p
       inc result
 
 proc part2(inputLines: seq[string]): int =
   return 0
 
 let input = 5.loadInput()
-# time("day 5 part 1"): echo input.part1()
+time("day 5 part 1"): echo input.part1()
 # time("day 5 part 2"): echo input.part2()
 
 when not defined(release):
