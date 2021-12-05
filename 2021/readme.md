@@ -40,7 +40,7 @@ Or
 
 - [x] [Day 1](./1.ts)
 - [x] [Day 2](./2.ts)
-- [ ] Day 3
+- [x] [Day 3](./3.ts)
 - [ ] Day 4
 - [ ] Day 5
 - [ ] Day 6
