@@ -42,28 +42,61 @@ proc squidBingo(inputLines: seq[string]): int =
 
   boards.add board
 
-  echo boards
-
   for n in calledNumbers:
-    echo n
     for b in boards.mitems():
       for i, e in b.entries:
         if n == e:
-          # TODO: why can't I add here but I can add on 46?!
           b.checked.add i
-      echo b.entries, b.checked
       if b.isBoardWinning():
         var entriesSum = 0
         for i, v in b.entries:
           if not (i in b.checked): entriesSum += v.parseInt()
-          else: echo &"{i} {v}"
-        echo &"{entriesSum} * {n} = {entriesSum * n.parseInt()}"
         return entriesSum * n.parseInt()
 
   return 0
 
+proc loseSquidBingo(inputLines: seq[string]): int =
+  var input: seq[string] = inputLines
+  let calledNumbers: seq[string] = input[0].split ','
+  input.delete 0..1
+
+  # construct boards
+  var boards: seq[Board]
+  var board: Board = Board(entries: @[], checked: @[])
+  for l in input:
+    if l.strip() == "":
+      boards.add board
+      board = Board(entries: @[], checked: @[])
+      continue
+    board.entries.add [l[0..1], l[3..4], l[6..7], l[9..10], l[12..13]].mapIt(it.strip())
+
+  boards.add board
+
+  for n in calledNumbers:
+    echo &"Calling {n}..."
+    var removeBoards: seq[int] = @[]
+    for bbi, b in boards.mpairs():
+      for i, e in b.entries:
+        if n == e:
+          b.checked.add i
+      if b.isBoardWinning():
+        echo "Board Win"
+        if (boards.len() - removeBoards.len()) < 2:
+          echo &"Last Board: {board}"
+          var entriesSum = 0
+          for i, v in b.entries:
+            if not (i in b.checked): entriesSum += v.parseInt()
+          return entriesSum * n.parseInt()
+        else:
+          removeBoards.add(bbi)
+    echo &"Removing {removeBoards.len()} board(s) of {boards.len()}..."
+    for i in removeBoards:
+      boards.delete(i, i)
+  return 0
+
 let input = 4.loadInput()
-time("squidBingo part 1"): echo input.squidBingo()
+# time("squidBingo part 1"): echo input.squidBingo()
+# time("loseSquidBingo part 2"): echo input.loseSquidBingo()
 
 when not defined(release):
   static:
@@ -86,4 +119,7 @@ when not defined(release):
 18  8 23 26 20
 22 11 13  6  5
  2  0 12  3  7""".split('\n')
-    doAssert testInput.squidBingo() == 4512
+    # doAssert testInput.squidBingo() == 4512
+    let r = testInput.loseSquidBingo()
+    echo r
+    doAssert r == 1924
