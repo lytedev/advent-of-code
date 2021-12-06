@@ -12,7 +12,9 @@ Specifically, here's my `deno --version` output:
 
 Enjoy!
 
-**EDIT**: Since performance is not what I would like, it looks like I'm also doing some of these in nim.
+**EDIT**: Since performance is not what I would like, it looks like I'm also doing some of these in Nim.
+
+**EDIT 2**: I sprinkled some zig in there. I've been meaning to mess with it for a while.
 
 ## Usage
 
@@ -20,30 +22,41 @@ Run these solutions like so:
 
     deno run --unstable --allow-all $DAY.ts
 
-And the nim ones like so:
+And the Nim ones like so:
 
     nim c -d:release -d:ssl --run $DAYMODULE.nim
 
-And if you want to measure memory usage:
+And the Zig ones like so:
+
+    zig build-exe -O ReleaseFast 6.zig -femit-bin=build/zig-$DAY
+    ./build/zig-$DAY
+
+And if you want to measure memory usage with Deno programs:
 
     mkdir -p build
     deno compile --output build/$DAY --unstable --allow-all $DAY.ts
     /usr/bin/time -v ./build/$DAY
 
-Or
+Or for Nim programs:
 
     mkdir -p build
     nim c -d:release -d:ssl --outdir:build $DAYMODULE.nim
     /usr/bin/time -v ./$DAYMODULE
 
+Or for Zig programs:
+
+    mkdir -p build
+    zig build-exe -O ReleaseFast 6.zig -femit-bin=build/zig-$DAY
+    /usr/bin/time -v ./build/zig-$DAY
+
 # Days
 
-- [x] [Day 1](./1.ts)
-- [x] [Day 2](./2.ts)
-- [x] [Day 3](./3.ts)
-- [x] [Day 4](./four.nim)
-- [x] [Day 5](./five.nim)
-- [x] [Day 6](./six.nim)
+- [x] Day 1: [Deno](./1.ts), [Nim](./one.nim)
+- [x] Day 2: [Deno](./2.ts), [Nim](./two.nim)
+- [x] Day 3: [Deno](./3.ts), [Nim](./three.nim)
+- [x] Day 4: [Nim](./four.nim)
+- [x] Day 5: [Nim](./five.nim)
+- [x] Day 6: [Nim](./six.nim)
 - [ ] Day 7
 - [ ] Day 8
 - [ ] Day 9
