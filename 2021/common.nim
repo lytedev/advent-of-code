@@ -20,6 +20,8 @@ proc inputStream*(day: int): Stream =
 
 proc toInts*(s: seq[string]): seq[int] = s.map(parseInt)
 
+proc loadInputText*(day: int): string = day.inputFilePath().readFile().strip()
+
 proc loadInput*(day: int): seq[string] =
   result = collect:
     for l in day.inputStream().lines(): l

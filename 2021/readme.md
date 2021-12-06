@@ -43,7 +43,7 @@ Or
 - [x] [Day 3](./3.ts)
 - [x] [Day 4](./four.nim)
 - [x] [Day 5](./five.nim)
-- [ ] Day 6
+- [x] [Day 6](./six.nim)
 - [ ] Day 7
 - [ ] Day 8
 - [ ] Day 9
