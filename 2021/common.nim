@@ -1,4 +1,4 @@
-import std/[streams, sequtils, strutils, sugar, strformat, times, httpclient, os]
+import std/[streams, sequtils, strutils, sugar, strformat, times, httpclient, os, options]
 
 const YEAR = getEnv("AOC_YEAR", "2021").parseInt()
 proc getCookie(): string = "~/.advent-of-code-auth-cookie".expandTilde().readFile()
@@ -35,3 +35,19 @@ template time*(i: string, body: untyped): untyped =
   when not defined(release):
     echo "NOTE: This is not a real measurement of performance. Compile in release mode with -d:release for best performance."
   # jkp: {(stop - start) * 1000} ms to calculate solution: {result}"
+
+proc doDay*[T](
+  day: int,
+  inputLoader: int -> T,
+  part1: T -> int,
+  part2: T -> int,
+  testInput: T,
+  expectedPart1: int,
+  expectedPart2: int): void =
+  let input = day.inputLoader()
+  time(&"day {day} part 1"): echo input.part1()
+  time(&"day {day} part 2"): echo input.part2()
+
+  when not defined(release):
+    doAssert testInput.part1() == expectedPart1
+    doAssert testInput.part2() == expectedPart2
