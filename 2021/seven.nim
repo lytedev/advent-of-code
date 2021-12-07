@@ -1,18 +1,17 @@
-import std/[strutils, sequtils, strformat]
-import ./common
+import ./common, std/[strutils, sequtils, strformat, sugar]
 
-proc crabFuel(input: string): int =
-  let crabs = input.split(',').map(parseInt)
-  result = int.high()
-  var maxCrab = crabs.foldl(max(a, b), 0)
-  for t in 0..maxCrab: result = min(crabs.foldl(a + abs(b - t), 0), result)
+proc crabFuel(c: seq[int]): int =
+  (0..c.foldl(max(a, b))).toSeq()
+    .reduce((r,t) => min(c.foldl(a + abs(b - t), 0), r), high(int))
 
 proc triangleNumber(n: int): int = int((n * (n + 1)) / 2)
 
-proc crabMoreFuel(input: string): int =
-  let crabs = input.split(',').map(parseInt)
-  result = int.high()
-  var maxCrab = crabs.foldl(max(a, b), 0)
-  for t in 0..maxCrab: result = min(crabs.foldl(a + (b - t).abs().triangleNumber(), 0), result)
+proc crabMoreFuel(c: seq[int]): int =
+  (0..c.foldl(max(a, b))).toSeq()
+    .reduce((r,t) => min(c.foldl(a + abs(b - t).triangleNumber(), 0), r), high(int))
 
-doDay(7, loadInputText, crabFuel, crabMoreFuel, "16,1,2,0,4,2,7,1,2,14", 37, 168)
+doDay(7,
+  (day) => day.loadInputText().split(',').map(parseInt),
+  crabFuel,
+  crabMoreFuel,
+  @[16,1,2,0,4,2,7,1,2,14], 37, 168)
