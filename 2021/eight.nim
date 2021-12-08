@@ -3,7 +3,7 @@ import ./common, std/[strutils, sequtils, strformat, sugar, sets, math]
 proc parseLine(s: string): seq[seq[string]] = s.split(" | ").mapIt(it.split(" "))
 
 proc p1(c: seq[string]): int =
-  c.reduce((a: int, l: string) =>
+  c.reduce((a: int, l) =>
     a + l.parseLine()[1].reduce((b: int, h) => b + int(h.len() in [2, 3, 4, 7]), 0), 0)
 
 proc numShared(s1: string, s2: string): int = (s1.toHashSet() * s2.toHashSet()).len()
