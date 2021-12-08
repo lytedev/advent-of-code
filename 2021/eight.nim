@@ -27,8 +27,7 @@ proc p2(c: seq[string]): int =
             of 6: 0
             of 5: 6
             else: 9
-      let x = (abs(oLine[1].len() - i) - 1)
-      result += outputVal * int(10 ^ x)
+      result += outputVal * int(10 ^ (abs(oLine[1].len() - i) - 1))
 
 # Explanation:
 # 1, 7, 8, and 4 are known and may be identified just by length, so we only
