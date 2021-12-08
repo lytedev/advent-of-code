@@ -34,7 +34,6 @@ template time*(i: string, body: untyped): untyped =
   echo i & " took " & diff & "ms to process input file and calculate solution"
   when not defined(release):
     echo "NOTE: This is not a real measurement of performance. Compile in release mode with -d:release for best performance."
-  # jkp: {(stop - start) * 1000} ms to calculate solution: {result}"
 
 proc doDay*[T](
   day: int,

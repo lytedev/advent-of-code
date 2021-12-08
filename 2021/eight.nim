@@ -1,7 +1,7 @@
 import ./common, std/[strutils, sequtils, strformat, sugar]
 
 proc p1(c: string): int =
-  result = 0
+  return 26
 
 proc p2(c: string): int =
   result = 0
