@@ -31,7 +31,7 @@ template time*(i: string, body: untyped): untyped =
   body
   let stop = cpuTime()
   let diff = $((stop - start) * 1000)
-  echo i & " took " & diff & "ms to calculate solution"
+  echo i & " took " & diff & "ms to process input file and calculate solution"
   when not defined(release):
     echo "NOTE: This is not a real measurement of performance. Compile in release mode with -d:release for best performance."
   # jkp: {(stop - start) * 1000} ms to calculate solution: {result}"
