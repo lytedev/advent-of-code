@@ -50,6 +50,10 @@ proc doDay*[T](
     doAssert testInput.part1() == expectedPart1
     doAssert testInput.part2() == expectedPart2
 
-proc reduce*[T](s: openArray[T], op: (T, T) -> T, init: T): T =
+proc reduce*[T, X](s: openArray[T], op: (X, T) -> X, init: X): X =
   result = init
   for n in s: result = op(result, n)
+
+proc findFirst*[T](s: openArray[T], op: (T) -> bool): T =
+  for n in s:
+    if op(n): return n

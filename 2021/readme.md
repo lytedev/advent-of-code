@@ -58,7 +58,7 @@ Or for Zig programs:
 - [x] Day 5: [Nim](./five.nim)
 - [x] Day 6: [Nim](./six.nim)
 - [x] Day 7: [Nim](./seven.nim)
-- [ ] Day 8
+- [x] Day 8: [Nim](./eight.nim)
 - [ ] Day 9
 - [ ] Day 10
 - [ ] Day 11
