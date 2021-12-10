@@ -1,45 +1,31 @@
-import ./common, std/[strutils, sequtils, strformat, sugar, sets, math, algorithm, tables]
+import ./common, std/[strutils, sequtils, algorithm, sugar, tables]
 
-const p = {'(': ')', '[': ']', '{': '}', '<': '>'}.toTable()
-const t = {')': 3, ']': 57, '}': 1197, '>': 25137}.toTable()
-proc p1(s: seq[string]): int =
-  var stack: seq[char] = @[]
-  for l in s:
-    for c in l:
-      if p.hasKey(c): stack.add(p[c])
-      else:
-        if stack.pop() != c: result += t[c]
+const pairs = toTable {'(': ')', '[': ']', '{': '}', '<': '>'}
+const corruptPoints = toTable {')': 3, ']': 57, '}': 1197, '>': 25137}
 
-const v = {')': 1, ']': 2, '}': 3, '>': 4}.toTable()
-proc p2(s: seq[string]): int =
-  var scores: seq[int] = @[]
-  for l in s:
-    var score = 0
+proc parse(input: seq[string]): (int, int) =
+  var cmps = newSeq[int]()
+  for line in input:
     var stack: seq[char] = @[]
-    for c in l:
-      if p.hasKey(c): stack.add(p[c])
-      else:
-        if stack.pop() != c:
-          score = -1
-          break
-    if score == -1: continue
-    for l in stack.reversed():
-      score *= 5
-      score += v[l]
-    scores.add(score)
-  scores.sort()
-  result = scores[(scores.len() div 2)]
+    for ch in line:
+      if pairs.hasKey ch: stack.add pairs[ch]
+      elif stack.pop != ch:
+        result[0] += corruptPoints[ch]
+        stack.setLen 0
+        break
+    if stack.len > 0: cmps.add stack.mapIt(" )]}>".find it).foldr 5 * b + a
+  result[1] = cmps.sorted[cmps.len div 2]
 
-doDay(10, (n) => n.loadInput(),
-  p1,
-  p2,
-  """[({(<(())[]>[[{[]{<()<>>
-[(()[<>])]({[<{<<[]>>(
-{([(<{}[<>[]}>{[]{[(<()>
-(((({<>}<{<{<>}{[]{[]{}
-[[<[([]))<([[{}[[()]]]
-[{[{({}]{}}([{[{{{}}([]
-{<[[]]>}<{[{[{[]{()[[[]
-[<(<(<(<{}))><([]([]()
-<{([([[(<>()){}]>(<<{{
-<{([{{}}[<[[[<>{}]]]>[]]""".split('\n'), 26397, 288957)
+doDay 10, n => n.loadInput(), s => s.parse[0], s => s.parse[1],
+  @[
+    "[({(<(())[]>[[{[]{<()<>>",
+    "[(()[<>])]({[<{<<[]>>(",
+    "{([(<{}[<>[]}>{[]{[(<()>",
+    "(((({<>}<{<{<>}{[]{[]{}",
+    "[[<[([]))<([[{}[[()]]]",
+    "[{[{({}]{}}([{[{{{}}([]",
+    "{<[[]]>}<{[{[{[]{()[[[]",
+    "[<(<(<(<{}))><([]([]()",
+    "<{([([[(<>()){}]>(<<{{",
+    "<{([{{}}[<[[[<>{}]]]>[]]",
+  ], 26397, 288957
