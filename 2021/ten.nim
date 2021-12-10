@@ -9,7 +9,6 @@ proc p1(s: seq[string]): int =
       if p.hasKey(c): stack.add(p[c])
       else:
         if stack.pop() != c: result += t[c]
-  echo result
 
 const v = {')': 1, ']': 2, '}': 3, '>': 4}.toTable()
 proc p2(s: seq[string]): int =
@@ -24,16 +23,12 @@ proc p2(s: seq[string]): int =
           score = -1
           break
     if score == -1: continue
-    echo stack
     for l in stack.reversed():
       score *= 5
       score += v[l]
-      echo score
     scores.add(score)
   scores.sort()
-  echo scores
   result = scores[(scores.len() div 2)]
-  echo result
 
 doDay(10, (n) => n.loadInput(),
   p1,
