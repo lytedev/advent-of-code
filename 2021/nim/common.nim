@@ -44,15 +44,15 @@ proc doDay*[T](
   expectedPart1: int,
   expectedPart2: int): void =
   time(&"day {day} part 1"): echo day.inputLoader().part1()
-  # time(&"day {day} part 2"): echo day.inputLoader().part2()
+  time(&"day {day} part 2"): echo day.inputLoader().part2()
 
   when not defined(release):
     var p1 = testInput.part1()
     echo p1
     doAssert p1 == expectedPart1
-    # var p2 = testInput.part2()
-    # echo p2
-    # doAssert p2 == expectedPart2
+    var p2 = testInput.part2()
+    echo p2
+    doAssert p2 == expectedPart2
 
 proc reduce*[T, X](s: openArray[T], op: (X, T) -> X, init: X): X =
   result = init
