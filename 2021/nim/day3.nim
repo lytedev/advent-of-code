@@ -59,7 +59,8 @@ time("powerConsumption part 1"): echo input.powerConsumption()
 time("lifeSupportRating part 2"): echo input.lifeSupportRating()
 
 when not defined(release):
-  static: let testInput = @[
+  static:
+    let testInput = @[
       "00100",
       "11110",
       "10110",

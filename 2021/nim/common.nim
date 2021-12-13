@@ -43,16 +43,26 @@ proc doDay*[T](
   testInput: T,
   expectedPart1: int,
   expectedPart2: int): void =
-  time(&"day {day} part 1"): echo day.inputLoader().part1()
-  time(&"day {day} part 2"): echo day.inputLoader().part2()
 
   when not defined(release):
     var p1 = testInput.part1()
-    echo p1
+    echo "Day ", day, " Part 1: ", p1, " (Expected: ", expectedPart1, ")"
     doAssert p1 == expectedPart1
     var p2 = testInput.part2()
-    echo p2
+    echo "Day ", day, " Part 2: ", p2, " (Expected: ", expectedPart2, ")"
     doAssert p2 == expectedPart2
+
+  time(&"Day {day} Part 1"): echo day.inputLoader().part1()
+  time(&"Day {day} Part 2"): echo day.inputLoader().part2()
+
+proc doDay*[T](
+  day: int,
+  inputLoader: int -> T,
+  part1: T -> int,
+  part2: T -> int,
+  testTuple: (T, int, int)): void =
+  let (tin, expectedPart1, expectedPart2) = testTuple
+  doDay(day, inputLoader, part1, part2, tin, expectedPart1, expectedPart2)
 
 proc reduce*[T, X](s: openArray[T], op: (X, T) -> X, init: X): X =
   result = init
