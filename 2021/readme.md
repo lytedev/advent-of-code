@@ -6,6 +6,7 @@ solutions using it.
 
 Specifically, here's my `deno --version` output:
 
+    $ deno --version
     deno 1.16.3 (release, x86_64-unknown-linux-gnu)
     v8 9.7.106.5
     typescript 4.4.2
@@ -14,7 +15,13 @@ Enjoy!
 
 **EDIT**: Since performance is not what I would like, it looks like I'm also doing some of these in Nim.
 
-**EDIT 2**: I sprinkled some zig in there. I've been meaning to mess with it for a while.
+    $ nim --version
+    Nim Compiler Version 1.6.0 [Linux: amd64]
+    Compiled at 2021-10-19
+    Copyright (c) 2006-2021 by Andreas Rumpf
+
+    git hash: 727c6378d2464090564dbcd9bc8b9ac648467e38
+    active boot switches: -d:release
 
 ## Usage
 
@@ -24,12 +31,7 @@ Run these solutions like so:
 
 And the Nim ones like so:
 
-    nim c -d:release -d:ssl --run $DAYMODULE.nim
-
-And the Zig ones like so:
-
-    zig build-exe -O ReleaseFast 6.zig -femit-bin=build/zig-$DAY
-    ./build/zig-$DAY
+    nim c -d:release -d:ssl --run day$DAY.nim
 
 And if you want to measure memory usage with Deno programs:
 
@@ -40,14 +42,8 @@ And if you want to measure memory usage with Deno programs:
 Or for Nim programs:
 
     mkdir -p build
-    nim c -d:release -d:ssl --outdir:build $DAYMODULE.nim
-    /usr/bin/time -v ./$DAYMODULE
-
-Or for Zig programs:
-
-    mkdir -p build
-    zig build-exe -O ReleaseFast 6.zig -femit-bin=build/zig-$DAY
-    /usr/bin/time -v ./build/zig-$DAY
+    nim c -d:release -d:ssl --outdir:build day$DAY.nim
+    /usr/bin/time -v ./day$DAY
 
 # Days
 
