@@ -1,5 +1,8 @@
 import std/[streams, sequtils, strutils, sugar, strformat, times, httpclient, os, options]
 
+type
+  Lines* = seq[string]
+
 const YEAR = getEnv("AOC_YEAR", "2021").parseInt()
 proc getCookie(): string = "~/.advent-of-code-auth-cookie".expandTilde().readFile()
 proc getCacheDir(): string = joinPath(expandTilde("~/.cache"), fmt"/aoc{YEAR}")
@@ -22,7 +25,7 @@ proc toInts*(s: seq[string]): seq[int] = s.map(parseInt)
 
 proc loadInputText*(day: int): string = day.inputFilePath().readFile().strip()
 
-proc loadInput*(day: int): seq[string] =
+proc loadInput*(day: int): Lines =
   result = collect:
     for l in day.inputStream().lines(): l
 
@@ -48,11 +51,14 @@ proc doDay*[T](
     var p1 = testInput.part1()
     echo "Day ", day, " Part 1: ", p1, " (Expected: ", expectedPart1, ")"
     doAssert p1 == expectedPart1
+
+  time(&"Day {day} Part 1"): echo day.inputLoader().part1()
+
+  when not defined(release):
     var p2 = testInput.part2()
     echo "Day ", day, " Part 2: ", p2, " (Expected: ", expectedPart2, ")"
     doAssert p2 == expectedPart2
 
-  time(&"Day {day} Part 1"): echo day.inputLoader().part1()
   time(&"Day {day} Part 2"): echo day.inputLoader().part2()
 
 proc doDay*[T](
