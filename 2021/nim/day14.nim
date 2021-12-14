@@ -6,31 +6,29 @@ proc parse(input: Lines): (string, Table[(char, char), char]) =
     var c = input[i].split(" -> ")
     result[1][(c[0][0], c[0][1])] = c[1][0]
 
-proc stepPolymer(polymer: string, combis: Table[(char, char), char]): string =
-  result.add polymer[0]
-  var i = 1
-  while i < polymer.len:
-    var key = (polymer[i-1], polymer[i])
-    if combis.contains key: result.add combis[key]
-    result.add polymer[i]
-    i += 1
-
-proc p1(input: Lines): uint64 =
+proc steps(input: Lines, steps: uint): uint64 =
   var (polymer, combis) = input.parse
-  for i in 1..10:
-    polymer = polymer.stepPolymer combis
-  var pps = polymer.toCountTable.values.toSeq
-  uint64(max(pps) - min(pps))
-
-proc p2(input: Lines): uint64 =
-  var (polymer, combis) = input.parse
-  for i in 1..40:
-    echo &"Step {i}"
-    polymer = polymer.stepPolymer combis
-  var t = initTable[char, uint64]()
-  for c in polymer:
-    inc t[c]
-  var pps = t.values.toSeq
+  var pCounter = initTable[(char, char), uint64]()
+  var cCounter = initTable[char, uint64]()
+  for k in combis.keys:
+    pCounter[k] = 0
+    cCounter[k[0]] = 0
+    cCounter[k[1]] = 0
+  inc cCounter[polymer[0]]
+  for i in 1..<polymer.len:
+    inc pCounter[(polymer[i-1], polymer[i])]
+    inc cCounter[polymer[i]]
+  for i in 1..steps:
+    var newPCounter = pCounter
+    for t, n in pCounter.pairs:
+      let (l, r) = t
+      var twixt = combis[(l, r)]
+      newPCounter[(l, r)] -= n
+      newPCounter[(l, twixt)] += n
+      newPCounter[(twixt, r)] += n
+      cCounter[twixt] += n
+    pCounter = newPCounter
+  var pps = cCounter.values.toSeq
   max(pps) - min(pps)
 
 const input = """
@@ -53,4 +51,4 @@ BC -> B
 CC -> N
 CN -> C
 """.strip().split('\n').mapIt(it.strip)
-doDayX 14, n => n.loadInput, p1, p2, (input, 1588'u64, 2188189693529'u64)
+doDayX 14, n => n.loadInput, (i) => steps(i, 10), (i) => steps(i, 40), (input, 1588'u64, 2188189693529'u64)
