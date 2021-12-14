@@ -15,15 +15,23 @@ proc stepPolymer(polymer: string, combis: Table[(char, char), char]): string =
     result.add polymer[i]
     i += 1
 
-proc p1(input: Lines): int =
+proc p1(input: Lines): uint64 =
   var (polymer, combis) = input.parse
   for i in 1..10:
     polymer = polymer.stepPolymer combis
   var pps = polymer.toCountTable.values.toSeq
-  max(pps) - min(pps)
+  uint64(max(pps) - min(pps))
 
-proc p2(input: Lines): int =
-  return 0
+proc p2(input: Lines): uint64 =
+  var (polymer, combis) = input.parse
+  for i in 1..40:
+    echo &"Step {i}"
+    polymer = polymer.stepPolymer combis
+  var t = initTable[char, uint64]()
+  for c in polymer:
+    inc t[c]
+  var pps = t.values.toSeq
+  max(pps) - min(pps)
 
 const input = """
 NNCB
@@ -45,4 +53,4 @@ BC -> B
 CC -> N
 CN -> C
 """.strip().split('\n').mapIt(it.strip)
-doDay 14, n => n.loadInput, p1, p2, (input, 1588, 0)
+doDayX 14, n => n.loadInput, p1, p2, (input, 1588'u64, 2188189693529'u64)

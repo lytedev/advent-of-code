@@ -38,14 +38,14 @@ template time*(i: string, body: untyped): untyped =
   when not defined(release):
     echo "NOTE: This is not a real measurement of performance. Compile in release mode with -d:release for best performance."
 
-proc doDay*[T](
+proc doDay*[T, X](
   day: int,
   inputLoader: int -> T,
-  part1: T -> int,
-  part2: T -> int,
+  part1: T -> X,
+  part2: T -> X,
   testInput: T,
-  expectedPart1: int,
-  expectedPart2: int): void =
+  expectedPart1: X,
+  expectedPart2: X): void =
 
   when not defined(release):
     var p1 = testInput.part1()
@@ -60,6 +60,15 @@ proc doDay*[T](
     doAssert p2 == expectedPart2
 
   time(&"Day {day} Part 2"): echo day.inputLoader().part2()
+
+proc doDayX*[T, X](
+  day: int,
+  inputLoader: int -> T,
+  part1: T -> X,
+  part2: T -> X,
+  testTuple: (T, X, X)): void =
+  let (tin, expectedPart1, expectedPart2) = testTuple
+  doDay(day, inputLoader, part1, part2, tin, expectedPart1, expectedPart2)
 
 proc doDay*[T](
   day: int,
