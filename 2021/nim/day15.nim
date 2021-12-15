@@ -74,7 +74,6 @@ proc p2(input: Lines): uint64 =
   let goal: Node = (w - 1, h - 1)
   astarCost(grid, start, goal, w, h, heuristic)
 
-  # astar
 const input = """
 1163751742
 1381373672
