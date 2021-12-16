@@ -1,0 +1,11 @@
+[package]
+name = "aoc2021"
+version = "0.1.0"
+edition = "2021"
+include = ["common.rs"]
+
+[[bin]]
+name = "day16"
+path = "day16.rs"
+
+[dependencies]
