@@ -62,14 +62,16 @@ fn trick_shot(r: &Rect) -> (Option<i64>, i64) {
     let mut result = None;
     let mut valid_shots = 0;
     for x in 1..=r.bottom_right.x {
-        for y in r.bottom_right.y..=2000 {
+        for y in r.bottom_right.y..=-r.bottom_right.y*2 {
             println!("Simulating {}, {}", x, y);
             if let Ok((v, hy)) = simulate_shot(Vec2 { x, y }, r) {
                 valid_shots += 1;
                 if result.is_some() {
-                    if hy > result.unwrap() { result = Some(hy); }
+                    if hy > result.unwrap() {
+                        println!("!! New Highest Y: {} via {}, {}", hy, x, y);
+                        result = Some(hy);
+                    }
                 } else {
-                    println!("!! New Highest Y: {} via {}, {}", hy, x, y);
                     result = Some(hy);
                 }
             }
