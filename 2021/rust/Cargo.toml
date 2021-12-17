@@ -8,4 +8,8 @@ include = ["common.rs"]
 name = "day16"
 path = "day16.rs"
 
+[[bin]]
+name = "day17"
+path = "day17.rs"
+
 [dependencies]
