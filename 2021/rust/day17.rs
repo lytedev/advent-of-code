@@ -58,12 +58,14 @@ fn simulate_shot(initial_vel: Vec2, target: &Rect) -> Result<(Vec2, i64), (Vec2,
     Err((Vec2 { x, y }, last_pos))
 }
 
-fn trick_shot(r: &Rect) -> Option<i64> {
+fn trick_shot(r: &Rect) -> (Option<i64>, i64) {
     let mut result = None;
-    for x in 1..=r.top_left.x {
+    let mut valid_shots = 0;
+    for x in 1..=r.bottom_right.x {
         for y in r.bottom_right.y..=2000 {
             println!("Simulating {}, {}", x, y);
             if let Ok((v, hy)) = simulate_shot(Vec2 { x, y }, r) {
+                valid_shots += 1;
                 if result.is_some() {
                     if hy > result.unwrap() { result = Some(hy); }
                 } else {
@@ -73,12 +75,12 @@ fn trick_shot(r: &Rect) -> Option<i64> {
             }
         }
     }
-    result
+    (result, valid_shots)
 }
 
 fn main() {
     let r = parse_target_rect(&day_input(17).trim());
-    println!("Trick Shot Apex: {}", trick_shot(&r).unwrap());
+    println!("Trick Shot Data: {:#?}", trick_shot(&r));
 }
 
 #[cfg(test)]
