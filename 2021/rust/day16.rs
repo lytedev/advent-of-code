@@ -99,7 +99,7 @@ enum BITSValue {
 #[derive(Debug)]
 pub struct BITSPacket {
     version: u8,
-    packet_type: u8,
+    op: PacketOp,
     inner: BITSValue,
 }
 
@@ -109,27 +109,54 @@ struct ParsedPacket {
     packet: BITSPacket,
 }
 
+#[derive(Debug)]
+enum PacketOp {
+    Sum,
+    Product,
+    Minimum,
+    Value,
+    Maximum,
+    GreaterThan,
+    LessThan,
+    EqualTo,
+}
+
+impl PacketOp {
+    pub fn from(b: u64) -> PacketOp {
+        match b {
+            1 => PacketOp::Product,
+            2 => PacketOp::Minimum,
+            3 => PacketOp::Maximum,
+            4 => PacketOp::Value,
+            5 => PacketOp::GreaterThan,
+            6 => PacketOp::LessThan,
+            7 => PacketOp::EqualTo,
+            _ => PacketOp::Sum,
+        }
+    }
+}
+
 fn parse_packet(bytes: &[u8], packet_start_bit: usize) -> Result<ParsedPacket, &'static str> {
     println!("PARSE PACKET at {}", packet_start_bit);
     let version = parse_bytes_from_bits(bytes, packet_start_bit, 3)?;
-    let packet_type = parse_bytes_from_bits(bytes, packet_start_bit + 3, 3)?;
-    println!("Processing packet with version {0} of type {2} at bit_index {1}", version, packet_start_bit, packet_type);
-    if packet_type == 4 {
+    let op = PacketOp::from(parse_bytes_from_bits(bytes, packet_start_bit + 3, 3)?);
+    println!("Processing packet with version {0} of type {2:#?} at bit_index {1}", version, packet_start_bit, op);
+    if matches!(op, PacketOp::Value) {
         let mut bit_index = packet_start_bit + 6;
         let mut value = 0u64;
         loop {
             let value_segment = parse_bytes_from_bits(bytes, bit_index, 5)?;
-            value = (value << 4) & (value_segment & 0b1111);
+            value = (value << 4) + value_segment;
             println!("Literal Value Segment at {}...", bit_index);
             bit_index += 5;
             if value_segment < 0b10000u64 { break; }
         }
-        println!("PARSE PACKET DONE (at {})", packet_start_bit);
+        println!("PARSE PACKET DONE (at {}) VALUE: {}", packet_start_bit, value);
         Ok(ParsedPacket {
             bits_parsed: bit_index - packet_start_bit,
             packet: BITSPacket {
                 version: version.to_le_bytes()[0],
-                packet_type: packet_type.to_le_bytes()[0],
+                op,
                 inner: BITSValue::LiteralValue(BITSLiteralValue { value }),
             }
         })
@@ -152,7 +179,7 @@ fn parse_packet(bytes: &[u8], packet_start_bit: usize) -> Result<ParsedPacket, &
             bits_parsed: 7 + 15 + subpacket_bits,
             packet: BITSPacket {
                 version: version.to_le_bytes()[0],
-                packet_type: packet_type.to_le_bytes()[0],
+                op,
                 inner: BITSValue::Operator(BITSOperator {
                     length_type: BITSLengthType::SubpacketCount,
                     length,
@@ -179,7 +206,7 @@ fn parse_packet(bytes: &[u8], packet_start_bit: usize) -> Result<ParsedPacket, &
             bits_parsed: bit_index - packet_start_bit,
             packet: BITSPacket {
                 version: version.to_le_bytes()[0],
-                packet_type: packet_type.to_le_bytes()[0],
+                op,
                 inner: BITSValue::Operator(BITSOperator {
                     length_type: BITSLengthType::SubpacketBits,
                     length,
@@ -205,13 +232,88 @@ pub fn packet_version_sum(packet: BITSPacket) -> u64 {
     }
 }
 
+pub fn packet_value(packet: BITSPacket) -> u64 {
+    // bytes.iter().for_each(|b| println!("{:#010b}", b));
+    println!("op: {:#?}", packet.op);
+    if let BITSValue::LiteralValue(p) = packet.inner {
+        println!("VALUE: {}", p.value);
+        p.value
+    } else if let BITSValue::Operator(mut p) = packet.inner {
+        match packet.op {
+            PacketOp::Sum => {
+                let mut sum = 0;
+                while !p.subpackets.is_empty() {
+                    sum += packet_value(p.subpackets.remove(0));
+                }
+                println!("Sum: {}", sum);
+                sum
+            },
+            PacketOp::Product => {
+                let mut product = packet_value(p.subpackets.remove(0));
+                while !p.subpackets.is_empty() {
+                    product *= packet_value(p.subpackets.remove(0));
+                }
+                println!("Product: {}", product);
+                product
+            },
+            PacketOp::Minimum => {
+                let mut min = u64::MAX;
+                while !p.subpackets.is_empty() {
+                    min = std::cmp::min(min, packet_value(p.subpackets.remove(0)));
+                }
+                println!("Min: {}", min);
+                min
+            },
+            PacketOp::Maximum => {
+                let mut max = u64::MIN;
+                while !p.subpackets.is_empty() {
+                    max = std::cmp::max(max, packet_value(p.subpackets.remove(0)));
+                }
+                println!("Max: {}", max);
+                max
+            },
+            PacketOp::GreaterThan => {
+                let v1 = packet_value(p.subpackets.remove(0));
+                let v2 =  packet_value(p.subpackets.remove(0));
+                println!("GT: {} > {} -> {}", v1, v2, u64::from(v1 > v2));
+                u64::from(v1 > v2)
+            },
+            PacketOp::LessThan => {
+                let v1 = packet_value(p.subpackets.remove(0));
+                let v2 =  packet_value(p.subpackets.remove(0));
+                println!("LT: {} > {} -> {}", v1, v2, u64::from(v1 < v2));
+                u64::from(v1 < v2)
+            },
+            PacketOp::EqualTo => {
+                let v1 = packet_value(p.subpackets.remove(0));
+                let v2 = packet_value(p.subpackets.remove(0));
+                println!("ET: {} == {} -> {}", v1, v2, u64::from(v1 == v2));
+                u64::from(v1 == v2)
+            }
+            _ => {
+                println!("UH-OH");
+                0
+            }
+        }
+    } else {
+        println!("UH-OH");
+        0
+    }
+}
+
 fn main() {
+    // part 1
     let bytes = hex_string_to_bytes(&day_input(16));
     bytes.iter().for_each(|b| println!("{:#010b}", b));
     let packet = parse_packet(&bytes, 0).unwrap().packet;
     // println!("{:#?}", packet);
     let version_sum = packet_version_sum(packet);
-    println!("Sum of packet versions: {:?}", version_sum);
+    println!("Sum of packet versions (part 1): {:?}", version_sum);
+
+    // println!("{:#?}", packet);
+    let packet2 = parse_packet(&bytes, 0).unwrap().packet;
+    let operation_result = packet_value(packet2);
+    println!("Packet operations result (part 2): {:?}", operation_result);
 }
 
 #[cfg(test)]
@@ -225,6 +327,19 @@ mod tests {
         assert_eq!(tester("620080001611562C8802118E34"), 12);
         assert_eq!(tester("C0015000016115A2E0802F182340"), 23);
         assert_eq!(tester("A0016C880162017C3686B18A3D4780"), 31);
+    }
+
+    #[test]
+    fn packet_op_result_examples() {
+        let tester = |s: &str| packet_value(parse_packet(&hex_string_to_bytes(&s.to_string()), 0).unwrap().packet);
+        assert_eq!(tester("C200B40A82"), 3);
+        assert_eq!(tester("04005AC33890"), 54);
+        assert_eq!(tester("880086C3E88112"), 7);
+        assert_eq!(tester("CE00C43D881120"), 9);
+        assert_eq!(tester("D8005AC2A8F0"), 1);
+        assert_eq!(tester("F600BC2D8F"), 0);
+        assert_eq!(tester("9C005AC2F8F0"), 0);
+        assert_eq!(tester("9C0141080250320F1802104A08"), 1);
     }
 
     #[test]
