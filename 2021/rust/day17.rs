@@ -92,6 +92,6 @@ mod tests {
     #[test]
     fn packet_op_result_examples() {
         let tester = |s: &str| trick_shot(&parse_target_rect(s));
-        assert_eq!(tester("target area: x=20..30, y=-10..-5").unwrap(), 45);
+        assert_eq!(tester("target area: x=20..30, y=-10..-5"), (Some(45), 112));
     }
 }
