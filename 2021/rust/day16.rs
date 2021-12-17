@@ -146,8 +146,8 @@ fn parse_packet(bytes: &[u8], packet_start_bit: usize) -> Result<ParsedPacket, &
         let mut value = 0u64;
         loop {
             let value_segment = parse_bytes_from_bits(bytes, bit_index, 5)?;
-            value = (value << 4) + value_segment;
-            println!("Literal Value Segment at {}...", bit_index);
+            value = (value << 4) + (value_segment & 0b01111);
+            println!("Literal Value Segment at {} = {}...", bit_index, value_segment);
             bit_index += 5;
             if value_segment < 0b10000u64 { break; }
         }
