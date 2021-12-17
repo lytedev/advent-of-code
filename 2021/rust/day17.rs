@@ -19,7 +19,7 @@ fn parse_target_rect(s: &str) -> Rect {
             .nth(1).unwrap()
             .split("..")
             .map(|s2| {
-                println!("Parsing Int: {}", s2);
+                // println!("Parsing Int: {}", s2);
                 s2.parse::<i64>().unwrap()
             })
             .take(2)
@@ -63,12 +63,12 @@ fn trick_shot(r: &Rect) -> (Option<i64>, i64) {
     let mut valid_shots = 0;
     for x in 1..=r.bottom_right.x {
         for y in r.bottom_right.y..=-r.bottom_right.y*2 {
-            println!("Simulating {}, {}", x, y);
+            // println!("Simulating {}, {}", x, y);
             if let Ok((v, hy)) = simulate_shot(Vec2 { x, y }, r) {
                 valid_shots += 1;
                 if result.is_some() {
                     if hy > result.unwrap() {
-                        println!("!! New Highest Y: {} via {}, {}", hy, x, y);
+                        // println!("!! New Highest Y: {} via {}, {}", hy, x, y);
                         result = Some(hy);
                     }
                 } else {
