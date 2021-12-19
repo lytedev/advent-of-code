@@ -50,8 +50,11 @@ fn maybe_explode<T: std::fmt::Debug>(tree: &mut BinaryTreeNode<T>) -> bool {
     }
 }
 
-fn parse_binary_tree(s: &str) -> Result<BinaryTreeNode<u64>, &'static str> {
-    let chars = s.chars().peekable();
+fn parse_binary_tree<'a, I>(str_iter: I) -> Result<BinaryTreeNode<u64>, &'static str> 
+where
+    I: Peekable<Item = &'a char>,
+{
+    let chars = str_iter.peekable();
     let ch = chars.peek();
     if let Some(c) = ch {
         match c {
@@ -72,7 +75,7 @@ fn parse_binary_tree(s: &str) -> Result<BinaryTreeNode<u64>, &'static str> {
 }
 
 fn main() {
-    let result = parse_binary_tree(&day_input(18));
+    let result = parse_binary_tree(day_input(18).chars());
     println!("Snailfish Homework: {:#?}", result);
 }
 
