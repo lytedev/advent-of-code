@@ -34,36 +34,63 @@ proc nodeAt(node: BinaryTreeNode, path: BinaryTreeNodePath): Option[BinaryTreeNo
       of right: curNode = node.left
   return some(curNode)
 
-proc crawlFor(node: BinaryTreeNode, predicate: (node: BinaryTreeNode, path: BinaryTreeNodePath) -> bool, path: BinaryTreeNodePath = @[]): Option[BinaryTreeNodePath] =
+proc crawlFor(node: BinaryTreeNode, predicate: (node: BinaryTreeNode, path: BinaryTreeNodePath) -> bool, path: BinaryTreeNodePath = @[], preferredSide: BinaryTreeNodePathSegment = left): Option[BinaryTreeNodePath] =
   if node.predicate(path): return some(path)
   elif node.kind == branch:
-    let lp = path & @[left]
-    let ln = node.left.crawlFor(predicate, lp)
-    if ln.isSome: return some(lp)
-    let rp = path & @[right]
-    let rn = node.right.crawlFor(predicate, rp)
-    if rn.isSome: return some(rp)
+    if preferredSide == left:
+      let lp = path & @[left]
+      let ln = node.left.crawlFor(predicate, lp, preferredSide)
+      if ln.isSome: return some(lp)
+      let rp = path & @[right]
+      let rn = node.right.crawlFor(predicate, rp, preferredSide)
+      if rn.isSome: return some(rp)
+    else:
+      let rp = path & @[right]
+      let rn = node.right.crawlFor(predicate, rp, preferredSide)
+      if rn.isSome: return some(rp)
+      let lp = path & @[left]
+      let ln = node.left.crawlFor(predicate, lp, preferredSide)
+      if ln.isSome: return some(lp)
   return none(BinaryTreeNodePath)
 
 when not defined(release):
-  let (bt, n) = parseBinaryTree("[[1,2],3]")
-  assert bt.right.value == 3'u64
-  assert bt.left.left.value == 1'u64
-  assert bt.left.right.value == 2'u64
-  assert n == 9
+  block:
+    let (bt, n) = parseBinaryTree("[[1,2],3]")
+    assert bt.right.value == 3'u64
+    assert bt.left.left.value == 1'u64
+    assert bt.left.right.value == 2'u64
+    assert n == 9
 
-proc valueLeftOf(node: var BinaryTreeNode, path: BinaryTreeNodePath): Option[BinaryTreeNodePath] =
-  # for every right in the given path ordered from deepest to shallowest
-  # go left at that point and find the right-most value if any
-  # if such a process fails to find anything, there's no possible value
+proc valueLeftOf(node: BinaryTreeNode, path: BinaryTreeNodePath): Option[BinaryTreeNodePath] =
+  var walker = path
+  while walker.len > 0:
+    if walker.pop == right:
+      let subPath = walker & @[left]
+      echo subPath
+      let subNode = node.nodeAt(subPath)
+      if subNode.isSome:
+        echo subPath, path
+        echo subNode.get.kind
+        let candidatePath = subNode.get.crawlFor((n, _) => n.kind == leaf, @[], right)
+        if candidatePath.isSome: return some(subPath & candidatePath.get)
+  return none(BinaryTreeNodePath)
 
-proc valueRightOf(node: var BinaryTreeNode, path: BinaryTreeNodePath): Option[BinaryTreeNodePath] =
-  # see valueLeftOf, but replace left<->right
+when not defined(release):
+  block:
+    let (bt, _) = parseBinaryTree("[[1,2],3]")
+    assert bt.valueLeftOf(@[right]) == some(@[left, right])
+    assert bt.valueLeftOf(@[left, left]) == none(BinaryTreeNodePath)
+    assert bt.valueLeftOf(@[left, right]) == some(@[left, left])
+    let (bt2, _) = parseBinaryTree("[1,[2,3]]")
+    assert bt2.valueLeftOf(@[right, right]) == some(@[right, left])
+    assert bt2.valueLeftOf(@[right, left]) == some(@[left])
 
 proc explodeAt(node: var BinaryTreeNode, path: BinaryTreeNodePath) =
+  return
   # TODO: implement exploding
 
 proc splitAt(node: var BinaryTreeNode, path: BinaryTreeNodePath) =
+  return
   # TODO: implement exploding
 
 proc p1(input: Lines): uint64 =
