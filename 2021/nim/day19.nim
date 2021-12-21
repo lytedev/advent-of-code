@@ -7,6 +7,9 @@ type
   Vec3Pair = array[2, Vec3]
   DumbDistTable = TableRef[int, Vec3Pair]
 
+iterator permuteTransforms(p: Vec3): seq[Vec3] =
+  # TODO: 
+
 proc dumbDist(a: Vec3, b: Vec3): int =
   result = abs(a[0]-b[0]) + abs(a[1]-b[1]) + abs(a[2]-b[2])
   # echo &"dumbDist: {result} from {a} to {b}"
