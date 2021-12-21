@@ -63,7 +63,6 @@ proc solver(input: Lines, times: int): uint64 =
     if v: inc result
 
 proc p1(input: Lines): uint64 = input.solver(2)
-
 proc p2(input: Lines): uint64 = input.solver(50)
 
 const input = """
@@ -73,6 +72,5 @@ const input = """
 #....
 ##..#
 ..#..
-..###
-""".strip().split('\n')
+..### """.strip().split('\n')
 doDayX 20, (n: int) => n.loadInput, p1, p2, (input, 35'u64, 3351'u64)
