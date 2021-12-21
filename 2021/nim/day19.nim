@@ -2,67 +2,90 @@ import ./common, std/[sequtils, algorithm, sugar, sets, strformat, strutils, tab
 
 type
   Vec3 = array[3, int]
-  BeaconPositions = seq[Vec3]
-  Sensors = seq[BeaconPositions]
+  Transform = array[3, (0..2, int)]
+  Beacons = seq[Vec3]
+  Scanner = (Option[Vec3], Beacons)
   Vec3Pair = array[2, Vec3]
-  DumbDistTable = TableRef[int, Vec3Pair]
 
-iterator permuteTransforms(p: Vec3): seq[Vec3] =
-  # TODO: 
+const TRANSFORMS: seq[Transform] = collect:
+  let x: 0..2 = 0
+  let y: 0..2 = 1
+  let z: 0..2 = 2
+  for xs in [-1, 1]:
+    for ys in [-1, 1]:
+      for zs in [-1, 1]:
+        for t in [[x, y, z], [x, z, y], [y, x, z], [y, z, x], [z, x, y], [z, y, x]]:
+          [(t[0], xs), (t[1], ys), (t[2], zs)]
 
-proc dumbDist(a: Vec3, b: Vec3): int =
-  result = abs(a[0]-b[0]) + abs(a[1]-b[1]) + abs(a[2]-b[2])
-  # echo &"dumbDist: {result} from {a} to {b}"
+proc `*`(v: Vec3, t: Transform): Vec3 = [v[t[0][0]] * t[0][1], v[t[1][0]] * t[1][1], v[t[2][0]] * t[2][1]]
+proc `+`(a: Vec3, b: Vec3): Vec3 = [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+proc `-`(a: Vec3, b: Vec3): Vec3 = [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 
 proc parse(s: string): Vec3 =
   let l = s.split(",", 3).map parseInt
   [l[0], l[1], l[2]]
 
-proc parse(l: openArray[string]): Sensors =
+proc parse(l: openArray[string]): seq[Scanner] =
   var sb: seq[Vec3] = @[]
   for line in l:
     if line == "":
-      result.add sb
+      result.add (none(Vec3), sb)
       continue
     elif line[0] == '-' and line[1] == '-':
       sb = @[]
     else: sb.add line.parse
-  result.add sb
+  result.add (none(Vec3), sb)
 
-proc p1(input: Sensors): uint64 =
-  var sensorsDumbDistTable = newTable[int, DumbDistTable]()
-  for i,s in input.pairs:
-    echo s
-    var dumbDistTable: DumbDistTable = newTable[int, Vec3Pair]()
-    for pair in product([s, s]):
-      if pair[0] == pair[1]: continue
-      dumbDistTable[dumbDist(pair[0], pair[1])] = [pair[0], pair[1]]
-    sensorsDumbDistTable[i] = dumbDistTable
-  var sensorMatches = newTable[int, int]()
-  for s1, ddt1 in sensorsDumbDistTable:
-    var maxMatches = 0
-    let kkeys = ddt1.keys.toSeq.sorted
-    echo &"Sorted {kkeys.len} Keys for Sensor {s1}: {kkeys}"
-    for s2, ddt2 in sensorsDumbDistTable:
-      if s1 == s2: continue
-      var ddMatches: seq[int] = @[]
-      for dd, vs in ddt1:
-        if ddt2.hasKey(dd): ddMatches.add dd
-      if ddMatches.len > maxMatches:
-        maxMatches = ddMatches.len
-        sensorMatches[s1] = s2
-      echo &"{s1} and {s2} have {ddMatches.len} dd matches: {ddMatches}"
-  # TODO once we have a solid guess of which sensors overlap using the dumbDist
-  # method, we'll need to actual math (probably?) to figure out how figure out
-  # the relative translation and rotation of the overlapping sensor using the
-  # matched points. once we can do that, we can "correct" the points from each
-  # sensor's beacons and remove overlapping onces.
-  # barring "actual math", I hate to imagine that this ends with brute-forcing
-  echo sensorMatches
-  0
+proc maybeGetScannerTransform(s1: Scanner, s2: Scanner): Option[(Vec3, Transform)] =
+  let (knownPos, beacons1) = s1
+  let (_, beacons2) = s2
+  for t in TRANSFORMS:
+    var dists = newCountTable[Vec3]()
+    for b1 in beacons1:
+      for b2 in beacons2:
+        let dist = b1 - (b2*t)
+        dists.inc dist
+        if dists[dist] >= 12:
+          return some (dist, t)
+  none (Vec3, Transform)
 
-proc p2(input: Sensors): uint64 =
-  0'u64
+var scanners: seq[Scanner] = @[]
+
+proc p1(input: seq[Scanner]): uint64 =
+  scanners = input
+  scanners[0][0] = some [0, 0, 0]
+  var known = @[0]
+  var needTransform = toSeq(1..<scanners.len)
+  while needTransform.len > 0:
+    block checker:
+      for ix in 0..<needTransform.len:
+        let i = needTransform[ix]
+        for ij in 0..<known.len:
+          let j = known[ij]
+          let mt = maybeGetScannerTransform(scanners[j], scanners[i])
+          if mt.isSome:
+            echo &"GOT ONE: {i} at {mt}"
+            let (offset, transform) = mt.get
+            echo &"Adding {i} (was at index {ix})"
+            known.add i
+            needTransform.delete(ix)
+            scanners[i][0] = some offset
+            scanners[i][1] = scanners[i][1].mapIt((it * transform) + offset)
+            break checker
+  var beaconPositions = toHashSet[Vec3] []
+  for s in scanners:
+    for b in s[1]:
+      beaconPositions.incl b
+  beaconPositions.len.uint64
+
+proc p2(input: seq[Scanner]): uint64 =
+  for s1 in scanners:
+    let (p1o, _) = s1
+    for s2 in scanners:
+      let (p2o, _) = s2
+      let p1 = p1o.get
+      let p2 = p2o.get
+      result = max(result, (abs(p1[0]-p2[0]) + abs(p1[1]-p2[1]) + abs(p1[2]-p2[2])).uint64)
 
 const input = """
 --- scanner 0 ---
@@ -202,4 +225,4 @@ const input = """
 -652,-548,-490
 30,-46,-14
 """.strip().split('\n').parse
-doDayX 19, (n: int) => n.loadInput.parse, p1, p2, (input, 79'u64, 0'u64)
+doDayX 19, (n: int) => n.loadInput.parse, p1, p2, (input, 79'u64, 3621'u64)
