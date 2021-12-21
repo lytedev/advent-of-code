@@ -55,22 +55,16 @@ proc `$`(image: Image): string =
     if image.pixels[p]: s[y-tly][x-tlx] = '#'
   s.join("\n")
 
-
-proc p1(input: Lines): uint64 =
+proc solver(input: Lines, times: int): uint64 =
+  let algo = input[0]
   var image = input[2..^1].parse()
-  echo &"{image.pixels.len} dim: {image.topLeft} {image.bottomRight}:"
-  echo image
-  image.enhance(input[0])
-  echo &"{image.pixels.len} dim: {image.topLeft} {image.bottomRight}:"
-  echo image
-  image.enhance(input[0])
-  echo &"{image.pixels.len} dim: {image.topLeft} {image.bottomRight}:"
-  echo image
+  for _ in 1..times: image.enhance algo
   for v in image.pixels.values:
     if v: inc result
 
-proc p2(input: Lines): uint64 =
-  0
+proc p1(input: Lines): uint64 = input.solver(2)
+
+proc p2(input: Lines): uint64 = input.solver(50)
 
 const input = """
 ..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#
@@ -81,4 +75,4 @@ const input = """
 ..#..
 ..###
 """.strip().split('\n')
-doDayX 20, (n: int) => n.loadInput, p1, p2, (input, 35'u64, 0'u64)
+doDayX 20, (n: int) => n.loadInput, p1, p2, (input, 35'u64, 3351'u64)
