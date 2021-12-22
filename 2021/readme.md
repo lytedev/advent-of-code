@@ -79,9 +79,9 @@ And similarly for Rust:
 - [x] Day 16: [Rust](./rust/day16.rs)
 - [x] Day 17: [Rust](./rust/day17.rs)
 - [x] Day 18: [Nim](./nim/day18.nim)
-- [ ] Day 19
-- [ ] Day 20
-- [ ] Day 21
+- [x] Day 19: [Nim](./nim/day19.nim)
+- [x] Day 20: [Nim](./nim/day20.nim)
+- [x] Day 21: [Nim](./nim/day21.nim)
 - [ ] Day 22
 - [ ] Day 23
 - [ ] Day 24
