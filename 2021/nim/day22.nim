@@ -5,7 +5,10 @@ const BOARD_POSITIONS = 10
 type
   Vec3 = tuple[x: int, y: int, z: int]
   Cuboid = tuple[pos: Vec3, size: Vec3]
-  GeoOp = (bool, Cuboid)
+  CuboidGeometry = HashSet[Cuboid]
+
+  CuboidOperator = enum union, difference
+  CuboidOperation = (CuboidOperator, Cuboid)
 
 let parser = peg"""
 grammar <- {'on' / 'off'} ' x=' range ',y=' range ',z=' range
@@ -13,17 +16,23 @@ range <- {num} \. \. {num}
 num <- ('-' \d+) / \d+
 """
 
-proc `+`(a: Vec3, b: Vec3): Vec3 = (x: a.x + b.x, y: a.y + b.y, z: a.z + b.z)
-proc `-`(a: Vec3, b: Vec3): Vec3 = (x: a.x - b.x, y: a.y - b.y, z: a.z - b.z)
-proc `*`(a: Vec3, b: Vec3): Vec3 = (x: a.x * b.x, y: a.y * b.y, z: a.z * b.z)
+proc apply(a: Vec3, b: Vec3, f: (int, int) -> int): Vec3 = (x: f(a.x, b.x), y: f(a.y, b.y), z: f(a.z, b.z))
+proc `+`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a + b)
+proc `-`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a - b)
+proc `*`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a * b)
+proc min(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => min(a, b))
+proc max(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => max(a, b))
 
-proc parse(s: string): Option[GeoOp] =
+proc parseCuboidOperator(s: string): CuboidOperator =
+  if s[1] == 'n': union else: difference
+
+proc parse(s: string): Option[CuboidOperation] =
   if s =~ parser:
     let
-      n = matches[1..6].map(parseInt)
+      n = matches[1..6].map parseInt
       pos = (x: min(n[0], n[1]), y: min(n[2], n[3]), z: min(n[4], n[5]))
-      size = (x: n[0] + n[1], y: n[2] + n[3], z: n[4] + n[5]) - pos
-    result = some (matches[0][1] == 'n', (pos, size))
+      size = (x: max(n[0], n[1]), y: max(n[2], n[3]), z: max(n[4], n[5])) - pos
+    result = some (matches[0].parseCuboidOperator, (pos, size))
 
 proc vertices(c: Cuboid): array[6, Vec3] =
   result[0] = c.pos
@@ -33,31 +42,68 @@ proc vertices(c: Cuboid): array[6, Vec3] =
   result[4] = c.pos + (c.size * (x: 1, y: 1, z: 0))
   result[5] = c.pos + (c.size * (x: 1, y: 1, z: 1))
 
-proc intersects(a: Cuboid, b: Cuboid): bool =
-  for v in a.vertices:
-    if b.contains v:
-      return true
-
 proc contains(a: Cuboid, b: Vec3): bool =
   b.x >= a.pos.x and b.x <= (a.pos.x + a.size.x) and
     b.y >= a.pos.y and b.y <= (a.pos.y + a.size.y) and
     b.z >= a.pos.z and b.z <= (a.pos.z + a.size.z)
 
-proc contains(a: Cuboid, b: Cuboid): bool =
-  for v in a.vertices:
-    if not b.contains v:
-      return false
+proc contains(a: Cuboid, b: Cuboid): bool = b.vertices.allIt a.contains it
+proc intersects(a: Cuboid, b: Cuboid): bool = a.vertices.anyIt b.contains it
 
-proc shatteredUnion(a: Cuboid, b: Cuboid): seq[Cuboid] =
-  if a.contains b: @[a]
-  elif b.contains a: @[b]
-  elif a.intersects b:
-  else: @[a, b]
+proc split(a: Cuboid, b:Cuboid): array[0..26, Cuboid] =
+  # find segments along each axis as subdivision points
+  let minpos = min(a.pos, b.pos)
+  let maxpos = max(a.pos, b.pos)
+
+proc `+=`(a: var CuboidGeometry, b: Cuboid) =
+  var g = toHashSet([b])
+  var toExcl = initHashSet[Cuboid]()
+  for ac in a:
+    block nextg:
+      var nextG = g
+      for gc in g:
+        if ac.contains gc: break nextg
+        elif gc.contains ac: toExcl.incl ac
+        elif ac.intersects gc:
+          # TODO: split and add to gc
+          # TODO: remove this
+          break nextg
+      g = nextG
+  a = (a - toExcl) + g
+
+proc `-=`(a: var CuboidGeometry, b: Cuboid) =
+  var g = toHashSet([b])
+  var toExcl = initHashSet[Cuboid]()
+  for ac in a:
+    block nextg:
+      for gc in g:
+        if gc.contains ac:
+          toExcl.incl ac
+        elif ac.contains gc:
+          # TODO: split and add to ac
+          break nextg
+        elif ac.intersects gc:
+          # TODO: split and add to ac, may not need to be separate from above
+          break nextg
+  a = (a - toExcl) + g
 
 proc p1(input: Lines): uint64 =
+  let bounds = (pos: (x: -50, y: -50, z: -50), size: (x: 100, y: 100, z: 100))
   var onCuboids = initHashSet[Cuboid]()
   for l in input:
-    let gop = l.parse
+    echo l
+    let cop = l.parse
+    echo cop
+    if cop.isNone: continue
+    let (op, cuboid) = cop.get
+    if not bounds.contains cuboid: continue
+    echo " ==> DOING"
+    case op:
+      of union: onCuboids += cuboid
+      of difference: onCuboids -= cuboid
+  echo onCuboids
+  for c in onCuboids: result += (c.size.x * c.size.y * c.size.z).uint64
+  # TODO: sum volume of all cuboids in `onCuboids`
 
 proc p2(input: Lines): uint64 =
   0
