@@ -20,8 +20,14 @@ proc apply(a: Vec3, b: Vec3, f: (int, int) -> int): Vec3 = (x: f(a.x, b.x), y: f
 proc `+`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a + b)
 proc `-`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a - b)
 proc `*`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a * b)
+proc volume(a: Vec3): uint64 = a.x.abs.uint64 * a.y.abs.uint64 * a.z.abs.uint64
+proc volume(c: CuboidGeometry): uint64 =
+  for cb in c: result += cb.size.volume
 proc min(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => min(a, b))
 proc max(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => max(a, b))
+proc v3(x: int, y: int, z: int): Vec3 = (x: x, y: y, z: z)
+proc cuboid(pos: Vec3, size: Vec3): Cuboid = (pos: pos, size: size)
+proc cuboid(x: int, y: int, z: int, w: int, d: int, h: int): Cuboid = cuboid(v3(x, y, z), v3(w, d, h))
 
 proc parseCuboidOperator(s: string): CuboidOperator =
   if s[1] == 'n': union else: difference
@@ -30,17 +36,17 @@ proc parse(s: string): Option[CuboidOperation] =
   if s =~ parser:
     let
       n = matches[1..6].map parseInt
-      pos = (x: min(n[0], n[1]), y: min(n[2], n[3]), z: min(n[4], n[5]))
-      size = (x: max(n[0], n[1]), y: max(n[2], n[3]), z: max(n[4], n[5])) - pos
+      pos = v3(min(n[0], n[1]), min(n[2], n[3]), min(n[4], n[5]))
+      size = v3(max(n[0], n[1]) + 1, max(n[2], n[3]) + 1, max(n[4], n[5]) + 1) - pos
     result = some (matches[0].parseCuboidOperator, (pos, size))
 
 proc vertices(c: Cuboid): array[6, Vec3] =
   result[0] = c.pos
-  result[1] = c.pos + (c.size * (x: 1, y: 0, z: 0))
-  result[2] = c.pos + (c.size * (x: 0, y: 1, z: 0))
-  result[3] = c.pos + (c.size * (x: 0, y: 0, z: 1))
-  result[4] = c.pos + (c.size * (x: 1, y: 1, z: 0))
-  result[5] = c.pos + (c.size * (x: 1, y: 1, z: 1))
+  result[1] = c.pos + (c.size * v3(1, 0, 0))
+  result[2] = c.pos + (c.size * v3(0, 1, 0))
+  result[3] = c.pos + (c.size * v3(0, 0, 1))
+  result[4] = c.pos + (c.size * v3(1, 1, 0))
+  result[5] = c.pos + (c.size * v3(1, 1, 1))
 
 proc contains(a: Cuboid, b: Vec3): bool =
   b.x >= a.pos.x and b.x <= (a.pos.x + a.size.x) and
@@ -48,65 +54,110 @@ proc contains(a: Cuboid, b: Vec3): bool =
     b.z >= a.pos.z and b.z <= (a.pos.z + a.size.z)
 
 proc contains(a: Cuboid, b: Cuboid): bool = b.vertices.allIt a.contains it
-proc intersects(a: Cuboid, b: Cuboid): bool = a.vertices.anyIt b.contains it
 
-proc split(a: Cuboid, b:Cuboid): array[0..26, Cuboid] =
-  # find segments along each axis as subdivision points
-  let minpos = min(a.pos, b.pos)
-  let maxpos = max(a.pos, b.pos)
+proc intersect(a: Cuboid, b: Cuboid): Option[Cuboid] =
+  let amx = a.pos + a.size
+  let bmx = b.pos + b.size
+  if amx.x < b.pos.x or bmx.x < a.pos.x or
+    amx.y < b.pos.y or bmx.y < a.pos.y or
+    amx.z < b.pos.z or bmx.z < a.pos.z:
+    return none Cuboid
+  let pos = max(a.pos, b.pos)
+  some (pos: pos, size: min(amx, bmx) - pos)
+
+proc difference(a: Cuboid, b: Cuboid): HashSet[Cuboid] =
+  let amx = a.pos + a.size
+  let bmx = b.pos + b.size
+  var xx = [(b.pos.x, b.size.x)].toSeq
+  var yy = [(b.pos.y, b.size.y)].toSeq
+  var zz = [(b.pos.z, b.size.z)].toSeq
+  echo &"difference:\n ==> {a}\n ==> {b}\n   -> {amx}, {bmx}"
+  if a.pos.x < b.pos.x: xx.add (a.pos.x, b.pos.x - a.pos.x)
+  if bmx.x < amx.x: xx.add (bmx.x, amx.x)
+  if a.pos.y < b.pos.y: yy.add (a.pos.y, b.pos.y - a.pos.y)
+  if bmx.y < amx.y: yy.add (bmx.y, amx.y)
+  if a.pos.z < b.pos.z: zz.add (a.pos.z, b.pos.z - a.pos.z)
+  if bmx.z < amx.z: zz.add (bmx.z, amx.z)
+  echo &"xyz diff: {xx}, {yy}, {zz}"
+  for xi in 0..<xx.len:
+    for yi in 0..<yy.len:
+      for zi in 0..<zz.len:
+        result.incl (pos: (x: xx[xi][0], y: yy[yi][0], z: zz[zi][0]), size: (x: xx[xi][1], y: yy[yi][1], z: zz[zi][1]))
 
 proc `+=`(a: var CuboidGeometry, b: Cuboid) =
-  var g = toHashSet([b])
+  var toIncl = toHashSet([b])
   var toExcl = initHashSet[Cuboid]()
   for ac in a:
-    block nextg:
-      var nextG = g
-      for gc in g:
-        if ac.contains gc: break nextg
-        elif gc.contains ac: toExcl.incl ac
-        elif ac.intersects gc:
-          # TODO: split and add to gc
-          # TODO: remove this
-          break nextg
-      g = nextG
-  a = (a - toExcl) + g
+    var nextIncl = toIncl
+    for nc in toIncl:
+      if ac.contains nc:
+        nextIncl.excl nc
+        break
+      elif nc.contains ac:
+        toExcl.incl ac
+      else:
+        nextIncl.excl nc
+        let intersect = ac.intersect nc
+        echo &"intersect for union: {intersect}"
+        if intersect.isSome: nextIncl.incl(intersect.get.difference(nc))
+    toIncl = nextIncl
+  a = (a - toExcl) + toIncl
+
+when not defined(release):
+  block:
+    let cv = proc (n: openArray[Cuboid]): uint64 =
+      var s = toHashSet([n[0]])
+      for i in 1..<n.len:
+        s += n[i]
+      result = s.volume
+      echo &"cv test: {result}\n"
+    assert [cuboid(0, 0, 0, 10, 10, 10), cuboid(-4, 5, 7, 4, 2, 2)].cv == 1016
+    assert [cuboid(0, 0, 0, 1, 1, 1), cuboid(1, 0, 0, 1, 1, 1)].cv == 2
+    assert [cuboid(0, 0, 0, 1, 1, 1), cuboid(1, 0, 0, 2, 2, 2)].cv == 9
+    assert [cuboid(0, 0, 0, 10, 10, 10), cuboid(8, 8, 8, 5, 5, 5)].cv == 1000 - 8 + 125
 
 proc `-=`(a: var CuboidGeometry, b: Cuboid) =
-  var g = toHashSet([b])
+  var toIncl = toHashSet[Cuboid]([])
+  var toDiff = toHashSet[Cuboid]([b])
   var toExcl = initHashSet[Cuboid]()
+  echo &"diff b: {b}"
   for ac in a:
-    block nextg:
-      for gc in g:
-        if gc.contains ac:
-          toExcl.incl ac
-        elif ac.contains gc:
-          # TODO: split and add to ac
-          break nextg
-        elif ac.intersects gc:
-          # TODO: split and add to ac, may not need to be separate from above
-          break nextg
-  a = (a - toExcl) + g
+    for dc in toDiff:
+      let intersect = ac.intersect dc
+      echo &"intersect for diff: {intersect}"
+      if intersect.isSome:
+        toExcl.incl ac
+        toIncl.incl(ac.difference(intersect.get))
+  a = (a - toExcl) + toIncl
 
 proc p1(input: Lines): uint64 =
   let bounds = (pos: (x: -50, y: -50, z: -50), size: (x: 100, y: 100, z: 100))
   var onCuboids = initHashSet[Cuboid]()
   for l in input:
-    echo l
     let cop = l.parse
-    echo cop
     if cop.isNone: continue
     let (op, cuboid) = cop.get
+    echo &"c: {op} {cuboid} ({cuboid.size.volume})"
     if not bounds.contains cuboid: continue
-    echo " ==> DOING"
     case op:
       of union: onCuboids += cuboid
       of difference: onCuboids -= cuboid
-  echo onCuboids
-  for c in onCuboids: result += (c.size.x * c.size.y * c.size.z).uint64
+  echo &"onCuboids: {onCuboids}"
+  onCuboids.volume
   # TODO: sum volume of all cuboids in `onCuboids`
 
 proc p2(input: Lines): uint64 =
   0
+
+# const alt = ("""
+# on x=0..9,y=0..9,z=0..9
+# on x=-4..3,y=5..6,z=7..8
+# """.strip().split('\n'), 1016'u64, 0'u64)
+
+const alt = ("""
+on x=0..1,y=0..0,z=0..0
+off x=0..0,y=0..0,z=0..0
+""".strip().split('\n'), 1'u64, 0'u64)
 
 const input = """
 on x=-20..26,y=-36..17,z=-47..7
@@ -132,4 +183,5 @@ on x=-41..9,y=-7..43,z=-33..15
 on x=-54112..-39298,y=-85059..-49293,z=-27449..7877
 on x=967..23432,y=45373..81175,z=27513..53682
 """.strip().split('\n')
-doDayX 22, (n: int) => n.loadInput, p1, p2, (input, 590784'u64, 0'u64)
+const rt = (input, 590784'u64, 0'u64)
+doDayX 22, (n: int) => n.loadInput, p1, p2, alt
