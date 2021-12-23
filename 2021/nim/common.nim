@@ -86,3 +86,7 @@ proc reduce*[T, X](s: openArray[T], op: (X, T) -> X, init: X): X =
 proc findFirst*[T](s: openArray[T], op: (T) -> bool): T =
   for n in s:
     if op(n): return n
+
+proc findFirstO*[T](s: openArray[T], op: (T) -> bool): Option[T] =
+  for n in s:
+    if op(n): return some n
