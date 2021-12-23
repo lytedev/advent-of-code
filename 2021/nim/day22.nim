@@ -74,8 +74,13 @@ proc p1(input: Lines): uint64 =
       result += (abs(x2 - x1 + 1) * abs(y2 - y1 + 1) * abs(z2 - z1 + 1)).uint64
 
 proc p2(input: Lines): uint64 =
-  echo "p2"
-  0
+  var ops = initHashSet[CuboidOperation]()
+  for op in input.asOps: ops.merge op
+  for op in ops:
+    let (t, c) = op
+    if t == union:
+      let (x1, x2, y1, y2, z1, z2) = c
+      result += abs(x2 - x1 + 1).uint64 * abs(y2 - y1 + 1).uint64 * abs(z2 - z1 + 1).uint64
 
 const rt = ("""on x=-20..26,y=-36..17,z=-47..7
 on x=-20..33,y=-21..23,z=-26..28
@@ -98,5 +103,5 @@ on x=-49..-5,y=-3..45,z=-29..18
 off x=18..30,y=-20..-8,z=-3..13
 on x=-41..9,y=-7..43,z=-33..15
 on x=-54112..-39298,y=-85059..-49293,z=-27449..7877
-on x=967..23432,y=45373..81175,z=27513..53682""".split('\n'), 590784'u64, 0'u64)
+on x=967..23432,y=45373..81175,z=27513..53682""".split('\n'), 590784'u64, 39769202357779'u64)
 doDayX 22, (n: int) => n.loadInput, p1, p2, rt
