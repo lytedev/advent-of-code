@@ -1,14 +1,10 @@
 import ./common, std/[sequtils, algorithm, sugar, sets, strformat, strutils, tables, options, json, hashes, random, pegs]
 
-const BOARD_POSITIONS = 10
-
 type
-  Vec3 = tuple[x: int, y: int, z: int]
-  Cuboid = tuple[pos: Vec3, size: Vec3]
-  CuboidGeometry = HashSet[Cuboid]
-
+  Cuboid = (int, int, int, int, int, int)
   CuboidOperator = enum union, difference
   CuboidOperation = (CuboidOperator, Cuboid)
+  CuboidOperations = HashSet[CuboidOperation]
 
 let parser = peg"""
 grammar <- {'on' / 'off'} ' x=' range ',y=' range ',z=' range
@@ -16,151 +12,72 @@ range <- {num} \. \. {num}
 num <- ('-' \d+) / \d+
 """
 
-proc apply(a: Vec3, b: Vec3, f: (int, int) -> int): Vec3 = (x: f(a.x, b.x), y: f(a.y, b.y), z: f(a.z, b.z))
-proc `+`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a + b)
-proc `-`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a - b)
-proc `*`(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => a * b)
-proc volume(a: Vec3): uint64 = a.x.abs.uint64 * a.y.abs.uint64 * a.z.abs.uint64
-proc volume(c: CuboidGeometry): uint64 =
-  for cb in c: result += cb.size.volume
-proc min(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => min(a, b))
-proc max(a: Vec3, b: Vec3): Vec3 = a.apply(b, (a, b) => max(a, b))
-proc v3(x: int, y: int, z: int): Vec3 = (x: x, y: y, z: z)
-proc cuboid(pos: Vec3, size: Vec3): Cuboid = (pos: pos, size: size)
-proc cuboid(x: int, y: int, z: int, w: int, d: int, h: int): Cuboid = cuboid(v3(x, y, z), v3(w, d, h))
-
 proc parseCuboidOperator(s: string): CuboidOperator =
   if s[1] == 'n': union else: difference
 
 proc parse(s: string): Option[CuboidOperation] =
   if s =~ parser:
-    let
-      n = matches[1..6].map parseInt
-      pos = v3(min(n[0], n[1]), min(n[2], n[3]), min(n[4], n[5]))
-      size = v3(max(n[0], n[1]) + 1, max(n[2], n[3]) + 1, max(n[4], n[5]) + 1) - pos
-    result = some (matches[0].parseCuboidOperator, (pos, size))
+    let n: seq[int] = matches[1..6].map(parseInt)
+    return some (matches[0].parseCuboidOperator, (n[0], n[1], n[2], n[3], n[4], n[5]))
 
-proc vertices(c: Cuboid): array[6, Vec3] =
-  result[0] = c.pos
-  result[1] = c.pos + (c.size * v3(1, 0, 0))
-  result[2] = c.pos + (c.size * v3(0, 1, 0))
-  result[3] = c.pos + (c.size * v3(0, 0, 1))
-  result[4] = c.pos + (c.size * v3(1, 1, 0))
-  result[5] = c.pos + (c.size * v3(1, 1, 1))
+proc asOps(l: Lines): seq[CuboidOperation] =
+  for s in l:
+    let cop = s.parse
+    if cop.isNone: continue
+    result.add cop.get
 
-proc contains(a: Cuboid, b: Vec3): bool =
-  b.x >= a.pos.x and b.x <= (a.pos.x + a.size.x) and
-    b.y >= a.pos.y and b.y <= (a.pos.y + a.size.y) and
-    b.z >= a.pos.z and b.z <= (a.pos.z + a.size.z)
+proc intersection(n: Cuboid, p: Cuboid): Option[Cuboid] =
+  let (nx1, nx2, ny1, ny2, nz1, nz2) = n
+  let (px1, px2, py1, py2, pz1, pz2) = p
+  if nx1 <= px2 and px1 <= nx2 and ny1 <= py2 and py1 <= ny2 and nz1 <= pz2 and pz1 <= nz2:
+    return some (max(px1, nx1), min(px2, nx2), max(py1, ny1), min(py2, ny2), max(pz1, nz1), min(pz2, nz2))
 
-proc contains(a: Cuboid, b: Cuboid): bool = b.vertices.allIt a.contains it
+proc merge(pastOps: var CuboidOperations, newOp: CuboidOperation) =
+  var toIncl = initHashSet[CuboidOperation]()
+  var toExcl = initHashSet[CuboidOperation]()
+  var included = false
 
-proc intersect(a: Cuboid, b: Cuboid): Option[Cuboid] =
-  let amx = a.pos + a.size
-  let bmx = b.pos + b.size
-  if amx.x < b.pos.x or bmx.x < a.pos.x or
-    amx.y < b.pos.y or bmx.y < a.pos.y or
-    amx.z < b.pos.z or bmx.z < a.pos.z:
-    return none Cuboid
-  let pos = max(a.pos, b.pos)
-  some (pos: pos, size: min(amx, bmx) - pos)
+  for pastOp in pastOps:
+    let (pastOpType, pastCuboid) = pastOp
+    let intersect = pastCuboid.intersection newOp[1]
+    if intersect.isNone: continue
+    included = true
+    toExcl.incl pastOp
 
-proc difference(a: Cuboid, b: Cuboid): HashSet[Cuboid] =
-  let amx = a.pos + a.size
-  let bmx = b.pos + b.size
-  var xx = [(b.pos.x, b.size.x)].toSeq
-  var yy = [(b.pos.y, b.size.y)].toSeq
-  var zz = [(b.pos.z, b.size.z)].toSeq
-  echo &"difference:\n ==> {a}\n ==> {b}\n   -> {amx}, {bmx}"
-  if a.pos.x < b.pos.x: xx.add (a.pos.x, b.pos.x - a.pos.x)
-  if bmx.x < amx.x: xx.add (bmx.x, amx.x)
-  if a.pos.y < b.pos.y: yy.add (a.pos.y, b.pos.y - a.pos.y)
-  if bmx.y < amx.y: yy.add (bmx.y, amx.y)
-  if a.pos.z < b.pos.z: zz.add (a.pos.z, b.pos.z - a.pos.z)
-  if bmx.z < amx.z: zz.add (bmx.z, amx.z)
-  echo &"xyz diff: {xx}, {yy}, {zz}"
-  for xi in 0..<xx.len:
-    for yi in 0..<yy.len:
-      for zi in 0..<zz.len:
-        result.incl (pos: (x: xx[xi][0], y: yy[yi][0], z: zz[zi][0]), size: (x: xx[xi][1], y: yy[yi][1], z: zz[zi][1]))
+    let (px1, px2, py1, py2, pz1, pz2) = pastCuboid
+    let (ix1, ix2, iy1, iy2, iz1, iz2) = intersect.get
+    let (nx1, nx2, ny1, ny2, nz1, nz2) = newOp[1]
 
-proc `+=`(a: var CuboidGeometry, b: Cuboid) =
-  var toIncl = toHashSet([b])
-  var toExcl = initHashSet[Cuboid]()
-  for ac in a:
-    var nextIncl = toIncl
-    for nc in toIncl:
-      if ac.contains nc:
-        nextIncl.excl nc
-        break
-      elif nc.contains ac:
-        toExcl.incl ac
-      else:
-        nextIncl.excl nc
-        let intersect = ac.intersect nc
-        echo &"intersect for union: {intersect}"
-        if intersect.isSome: nextIncl.incl(intersect.get.difference(nc))
-    toIncl = nextIncl
-  a = (a - toExcl) + toIncl
+    if px1 < ix1: toIncl.incl (pastOpType, (px1, ix1 - 1, py1, py2, pz1, pz2))
+    if ix2 < px2: toIncl.incl (pastOpType, (ix2 + 1, px2, py1, py2, pz1, pz2))
+    if py1 < iy1: toIncl.incl (pastOpType, (ix1, ix2, py1, iy1 - 1, pz1, pz2))
+    if iy2 < py2: toIncl.incl (pastOpType, (ix1, ix2, iy2 + 1, py2, pz1, pz2))
+    if pz1 < iz1: toIncl.incl (pastOpType, (ix1, ix2, iy1, iy2, pz1, iz1 - 1))
+    if iz2 < pz2: toIncl.incl (pastOpType, (ix1, ix2, iy1, iy2, iz2 + 1, pz2))
+    
+    toIncl.incl (newOp[0], (min(ix1, nx1), max(ix2, nx2), min(iy1, ny1), max(iy2, ny2), min(iz1, nz1), max(iz2, nz2)))
 
-when not defined(release):
-  block:
-    let cv = proc (n: openArray[Cuboid]): uint64 =
-      var s = toHashSet([n[0]])
-      for i in 1..<n.len:
-        s += n[i]
-      result = s.volume
-      echo &"cv test: {result}\n"
-    assert [cuboid(0, 0, 0, 10, 10, 10), cuboid(-4, 5, 7, 4, 2, 2)].cv == 1016
-    assert [cuboid(0, 0, 0, 1, 1, 1), cuboid(1, 0, 0, 1, 1, 1)].cv == 2
-    assert [cuboid(0, 0, 0, 1, 1, 1), cuboid(1, 0, 0, 2, 2, 2)].cv == 9
-    assert [cuboid(0, 0, 0, 10, 10, 10), cuboid(8, 8, 8, 5, 5, 5)].cv == 1000 - 8 + 125
-
-proc `-=`(a: var CuboidGeometry, b: Cuboid) =
-  var toIncl = toHashSet[Cuboid]([])
-  var toDiff = toHashSet[Cuboid]([b])
-  var toExcl = initHashSet[Cuboid]()
-  echo &"diff b: {b}"
-  for ac in a:
-    for dc in toDiff:
-      let intersect = ac.intersect dc
-      echo &"intersect for diff: {intersect}"
-      if intersect.isSome:
-        toExcl.incl ac
-        toIncl.incl(ac.difference(intersect.get))
-  a = (a - toExcl) + toIncl
+  pastOps.excl toExcl
+  pastOps.incl toIncl
+  if not included: pastOps.incl(newOp)
 
 proc p1(input: Lines): uint64 =
-  let bounds = (pos: (x: -50, y: -50, z: -50), size: (x: 100, y: 100, z: 100))
-  var onCuboids = initHashSet[Cuboid]()
-  for l in input:
-    let cop = l.parse
-    if cop.isNone: continue
-    let (op, cuboid) = cop.get
-    echo &"c: {op} {cuboid} ({cuboid.size.volume})"
-    if not bounds.contains cuboid: continue
-    case op:
-      of union: onCuboids += cuboid
-      of difference: onCuboids -= cuboid
-  echo &"onCuboids: {onCuboids}"
-  onCuboids.volume
-  # TODO: sum volume of all cuboids in `onCuboids`
+  var ops = initHashSet[CuboidOperation]()
+  for op in input.asOps:
+    let (_, c) = op
+    if [c[0], c[1], c[2], c[3], c[4], c[5]].anyIt((it < -50) or (it > 50)): continue
+    ops.merge op
+  for op in ops:
+    let (t, c) = op
+    if t == union:
+      let (x1, x2, y1, y2, z1, z2) = c
+      result += (abs(x2 - x1 + 1) * abs(y2 - y1 + 1) * abs(z2 - z1 + 1)).uint64
 
 proc p2(input: Lines): uint64 =
+  echo "p2"
   0
 
-# const alt = ("""
-# on x=0..9,y=0..9,z=0..9
-# on x=-4..3,y=5..6,z=7..8
-# """.strip().split('\n'), 1016'u64, 0'u64)
-
-const alt = ("""
-on x=0..1,y=0..0,z=0..0
-off x=0..0,y=0..0,z=0..0
-""".strip().split('\n'), 1'u64, 0'u64)
-
-const input = """
-on x=-20..26,y=-36..17,z=-47..7
+const rt = ("""on x=-20..26,y=-36..17,z=-47..7
 on x=-20..33,y=-21..23,z=-26..28
 on x=-22..28,y=-29..23,z=-38..16
 on x=-46..7,y=-6..46,z=-50..-1
@@ -181,7 +98,5 @@ on x=-49..-5,y=-3..45,z=-29..18
 off x=18..30,y=-20..-8,z=-3..13
 on x=-41..9,y=-7..43,z=-33..15
 on x=-54112..-39298,y=-85059..-49293,z=-27449..7877
-on x=967..23432,y=45373..81175,z=27513..53682
-""".strip().split('\n')
-const rt = (input, 590784'u64, 0'u64)
-doDayX 22, (n: int) => n.loadInput, p1, p2, alt
+on x=967..23432,y=45373..81175,z=27513..53682""".split('\n'), 590784'u64, 0'u64)
+doDayX 22, (n: int) => n.loadInput, p1, p2, rt
