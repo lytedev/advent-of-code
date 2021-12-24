@@ -55,30 +55,38 @@ proc move(s: AmphipodCaveState, ai: int, p: Vec2): (AmphipodCaveState, uint64) =
   (newState, s.path(ai, p).len.uint64 * s[ai].breed.weight.uint64)
 
 proc spaceOccupied(s: AmphipodCaveState, p: Vec2): bool =
-  s.anyIt(it.pos == p) or (p.y > 2 or p.y < 0 or p.x < 0 or p.x > 10)
+  let maxY = if s.len > 8: 4 else: 2
+  s.anyIt(it.pos == p) or (p.y > maxY or p.y < 0 or p.x < 0 or p.x > 10)
 
 proc canMoveTo(s: AmphipodCaveState, ai: int, goal: Vec2): bool =
   let a = s[ai]
   let pos = s[ai].pos
+  # echo " -> staying in hallway"
   if pos.y == 0 and goal.y == 0: return false
+  # echo " -> blocking homes"
   if goal.y == 0 and homeSet.contains(goal.x): return false
+  # echo " -> out of bounds"
   if goal.y > 0 and not homeSet.contains(goal.x): return false
+  # echo " -> not bottom of home"
   if goal.y >= 1:
     let maxY = if s.len > 8: 4 else: 2
-    for y in 2..maxY:
+    for y in goal.y+1..maxY:
       if not s.spaceOccupied(v2(goal.x, y)): return false
+  # echo " -> not-yet-empty home"
   if goal.y > 0:
     for sib in s:
       if sib.breed == a.breed: continue
       if sib.pos.x == goal.x and sib.pos.y > goal.y: return false
   if goal.y > 0 and goal.x != a.breed.home: return false
+  # echo " -> pathing blocked"
   let path = s.path(ai, goal)
+  # echo path
   if path.anyIt(s.spaceOccupied(it)): return false
   true
 
 proc isWin(s: AmphipodCaveState): bool =
   result = s.allIt(it.pos.x == it.breed.home and it.pos.y > 0)
-  if result: echo &"WIN\n{s}\n"
+  # if result: echo &"WIN\n{s}\n"
 
 proc possibleMoves(s: AmphipodCaveState, ai: int): HashSet[Vec2] =
   let a = s[ai]
