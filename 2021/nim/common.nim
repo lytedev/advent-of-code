@@ -48,11 +48,11 @@ proc doDay*[T, X](
   expectedPart2: X): void =
 
   # when not defined(release):
-  var p1 = testInput.part1()
-  echo "Day ", day, " Part 1: ", p1, " (Expected: ", expectedPart1, ")"
-  doAssert p1 == expectedPart1
+  # var p1 = testInput.part1()
+  # echo "Day ", day, " Part 1: ", p1, " (Expected: ", expectedPart1, ")"
+  # doAssert p1 == expectedPart1
 
-  time(&"Day {day} Part 1"): echo day.inputLoader().part1()
+  # time(&"Day {day} Part 1"): echo day.inputLoader().part1()
 
   # when not defined(release):
   var p2 = testInput.part2()

@@ -11,6 +11,8 @@ let homeSet = HOMES.toHashSet
 
 proc `$`(s: AmphipodCaveState): string =
   var ss = @["...........", "  . . . .", "  . . . .", ""]
+  if s.len > 8:
+    ss = @["...........", "  . . . .", "  . . . .", "  . . . .", "  . . . .", ""]
   for a in s:
     let bb = $a.breed
     ss[a.pos.y][a.pos.x] = bb[0]
@@ -35,9 +37,6 @@ proc parseCaveState(l: Lines): AmphipodCaveState =
       let b = c.parseAmphipodBreed
       if b.isSome: result.add newAmphipod(b.get, x - 1, y - 1)
 
-proc roomAvailable(s: AmphipodCaveState, column: int): bool =
-  true
-
 proc path(s: AmphipodCaveState, ai: int, goal: Vec2): seq[Vec2] =
   let a = s[ai]
   if a.pos.y > 0:
@@ -61,60 +60,60 @@ proc spaceOccupied(s: AmphipodCaveState, p: Vec2): bool =
 proc canMoveTo(s: AmphipodCaveState, ai: int, goal: Vec2): bool =
   let a = s[ai]
   let pos = s[ai].pos
-  # echo " -> once in the hallway, we can't move somewhere else in the hallway"
   if pos.y == 0 and goal.y == 0: return false
-  # echo " -> no blocking"
   if goal.y == 0 and homeSet.contains(goal.x): return false
-  # echo " -> non-positions"
   if goal.y > 0 and not homeSet.contains(goal.x): return false
-  # echo " -> can't leave empty spots below when going home"
-  if goal.y == 1 and not s.spaceOccupied(v2(goal.x, 2)): return false
-  # echo " -> can't enter home if occupied by another breed"
+  if goal.y >= 1:
+    let maxY = if s.len > 8: 4 else: 2
+    for y in 2..maxY:
+      if not s.spaceOccupied(v2(goal.x, y)): return false
   if goal.y > 0:
     for sib in s:
       if sib.breed == a.breed: continue
       if sib.pos.x == goal.x and sib.pos.y > goal.y: return false
-  # echo " -> can't enter somebody else's home"
   if goal.y > 0 and goal.x != a.breed.home: return false
-  # echo " -> can't move through any occupied positions"
   let path = s.path(ai, goal)
   if path.anyIt(s.spaceOccupied(it)): return false
-  # echo " -> Allowed!"
   true
 
 proc isWin(s: AmphipodCaveState): bool =
   result = s.allIt(it.pos.x == it.breed.home and it.pos.y > 0)
-  # if result:
-    # echo s
-    # echo "I WON"
+  if result: echo &"WIN\n{s}\n"
 
 proc possibleMoves(s: AmphipodCaveState, ai: int): HashSet[Vec2] =
   let a = s[ai]
-  var possibleMoves = newSeq[Vec2]()
   if a.pos.y > 0:
     for x in 0..10:
       if not homeSet.contains x: result.incl v2(x, 0)
-  for y in 1..2:
+  let maxY = if s.len > 8: 4 else: 2
+  for y in 1..maxY:
     result.incl (x: a.breed.home, y: y)
 
 proc getByPos(s: AmphipodCaveState, pos: Vec2): Option[Amphipod] = s.findFirstO(a => a.pos == pos)
 proc isHome(a: Amphipod): bool = a.pos.x == a.breed.home and a.pos.y > 0
 
 proc doneMoving(s: AmphipodCaveState, ai: int): bool =
+  let maxY = if s.len > 8: 4 else: 2
   let a = s[ai]
-  if a.isHome and a.pos.y >= 2: return true
-  let below = s.getByPos((x: a.pos.x, y: 2))
-  if below.isSome: return a.isHome and below.get.isHome
+  if a.isHome:
+    if a.pos.y >= maxY: return true
+    for y in (a.pos.y+1)..maxY:
+      let below = s.getByPos((x: a.pos.x, y: y))
+      if below.isSome:
+        if below.get.breed != a.breed: return false
+      else: return false
+    return true
+  false
 
 var cheapestWins = newTable[AmphipodCaveState, (uint64, uint64)]()
 proc cheapestWin(s: AmphipodCaveState, cost: uint64, depth = 0): uint64 =
   result = uint64.high
   # echo &"cheapestWin: {cost} {depth}\n{s}"
   if cheapestWins.hasKey s:
-    # echo &"cache hit for {s}: {cheapestWins[s]}"
     if cheapestWins[s][0] <= cost:
+      # echo &"cache hit for\n{s}\n -> {cheapestWins[s]}"
       return cheapestWins[s][1]
-  if s.isWin or cost > 400000: return cost
+  if s.isWin or cost > 400000 or depth >= (s.len * 2): return cost
   var costs = initHashSet[uint64]()
   for ai,a in s:
     if s.doneMoving(ai): continue
@@ -136,6 +135,8 @@ proc testMoves(state: AmphipodCaveState, moves: seq[(int, Vec2)]) =
     let suggestions = s.possibleMoves(ai)
     echo suggestions
     var sugs = @["...........", "  . . . .", "  . . . .", ""]
+    if s.len > 8:
+      sugs = @["...........", "  . . . .", "  . . . .", "  . . . .", "  . . . .", ""]
     for sug in suggestions:
       sugs[sug.y][sug.x] = 'X'
     sugs[s[ai].pos.y][s[ai].pos.x] = 'O'
@@ -150,12 +151,40 @@ proc testMoves(state: AmphipodCaveState, moves: seq[(int, Vec2)]) =
     echo &"Did we win? {s.isWin} -- Cost so far: {cost}"
 
 proc p1(input: Lines): uint64 =
+  echo "Crunching part 1"
   input.parseCaveState.cheapestWin(0)
 
 proc p2(input: Lines): uint64 =
+  echo "Crunching part 2"
   var unfoldedInput = input
-  unfoldedInput.insert("  #D#C#B#A#", 1)
-  unfoldedInput.insert("  #D#C#B#A#", 2)
+  unfoldedInput.insert("  #D#C#B#A#", 3)
+  unfoldedInput.insert("  #D#B#A#C#", 4)
+  echo unfoldedInput.parseCaveState
+  unfoldedInput.parseCaveState.testMoves(@[
+    (3, (x: 10, y: 0)),
+    (7, (x: 0, y: 0)),
+    (2, (x: 9, y: 0)),
+    (6, (x: 7, y: 0)),
+    (10, (x: 1, y: 0)),
+    (1, (x: 6, y: 3)),
+    (5, (x: 6, y: 2)),
+    (9, (x: 5, y: 0)),
+    (13, (x: 3, y: 0)),
+    (9, (x: 4, y: 4)),
+    (6, (x: 4, y: 3)),
+    (2, (x: 4, y: 2)),
+    (11, (x: 6, y: 1)),
+    (15, (x: 9, y: 0)),
+    (13, (x: 8, y: 4)),
+    (0, (x: 4, y: 1)),
+    (4, (x: 8, y: 3)),
+    (8, (x: 8, y: 2)),
+    (10, (x: 2, y: 3)),
+    (7, (x: 2, y: 2)),
+    (15, (x: 2, y: 1)),
+    (3, (x: 8, y: 1)),
+  ])
+  echo "Crunching part 2"
   unfoldedInput.parseCaveState.cheapestWin(0)
 
 const rt = ("""
