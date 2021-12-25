@@ -14,8 +14,6 @@ proc p1(input: Lines): uint64 =
     if instructionArgs[o+4] == 26:
       let (previousI, previousAddend) = cantComputeYet.pop
       let diff = previousAddend + instructionArgs[o+5]
-      echo diff
-      echo previousI
       if diff < 0:
         reversedDigits[previousI] = 9
         reversedDigits[i] = 9 + diff
