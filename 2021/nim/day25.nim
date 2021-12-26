@@ -7,32 +7,28 @@ proc p1(input: Lines): uint64 =
   while true:
     echo result
     var nextCukes = cukes
-    if result < 4:
-      echo nextCukes.join("\n")
-      echo ""
-    let startHash = nextCukes.hash
-    for y,line in nextCukes.pairs:
+    echo nextCukes.join("\n")
+    echo ""
+    let startHash = cukes.hash
+    for y,line in cukes.pairs:
       for x,c in line.pairs:
         let tx = if x >= w - 1: 0 else: x + 1
-        if c == '>' and nextCukes[y][tx] == '.':
+        if c == '>' and cukes[y][tx] == '.':
           echo &"{x}, {y} going right"
           nextCukes[y][x] = '.'
-          nextCukes[y][tx] = 'r'
+          nextCukes[y][tx] = '>'
+    cukes = nextCukes
     for y,line in cukes.pairs:
       for x,c in line.pairs:
         let ty = if y >= h - 1: 0 else: y + 1
-        if c == 'v' and nextCukes[ty][x] == '.':
+        if c == 'v' and cukes[ty][x] == '.':
           echo &"{x}, {y} going down"
-          nextCukes[y][x] = 'u'
+          nextCukes[y][x] = '.'
           nextCukes[ty][x] = 'v'
-    for y,line in nextCukes.pairs:
-      for x,c in line:
-        if c == 'u': nextCukes[y][x] = '.'
-        elif c == 'r': nextCukes[y][x] = '>'
 
+    inc result
     if nextCukes.hash == startHash: break
     cukes = nextCukes
-    inc result
 
 proc p2(input: Lines): uint64 =
   0
