@@ -1,4 +1,4 @@
-import ./common, std/[strutils, hashes, sugar, strformat]
+import ./common, std/[strutils, hashes, sugar]
 
 proc p1(input: Lines): uint64 =
   var h = input.len
