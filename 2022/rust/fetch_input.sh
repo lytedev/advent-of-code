@@ -13,6 +13,7 @@ if [ -f "$f" ]; then
 fi
 url="https://adventofcode.com/$AOC_YEAR/day/$DAY/input"
 cookie="$(cat "$HOME/.advent-of-code-auth-cookie")"
+mkdir -p "$(dirname "$f")"
 if curl --fail-with-body -X GET "$url" -H "Cookie:$cookie" > "$f"; then
   echo "Downloaded $url to $f"
   exit 0
