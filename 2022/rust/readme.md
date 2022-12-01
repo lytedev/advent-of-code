@@ -20,7 +20,7 @@ need `curl` and your Advent of Code cookie in `~/.advent-of-code-session-cookie`
 to run the following script:
 
 ```bash
-fetch_input.sh 1
+./fetch_input.sh 1
 ```
 
 Where `1` is the day's input you want to fetch.
