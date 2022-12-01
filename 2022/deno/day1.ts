@@ -1,5 +1,5 @@
 const tDec = new TextDecoder();
-const input = tDec.decode(Deno.readFileSync("day1.input"));
+const input = tDec.decode(Deno.readFileSync("../inputs/day1.input"));
 
 console.log(
   "final",
