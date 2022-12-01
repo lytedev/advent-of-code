@@ -17,7 +17,7 @@ fn ordered_calories(input: &str) -> Vec<i32> {
             }
         }
     }
-    result.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    result.sort_by(|a, b| b.cmp(a));
     result
 }
 
