@@ -22,11 +22,11 @@ mod tests {
 
     #[test]
     fn test_part1() {
-        assert_eq!(part1(TEST_INPUT), 0)
+        assert_eq!(part1(TEST_INPUT), 10000)
     }
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(TEST_INPUT), 0)
+        assert_eq!(part2(TEST_INPUT), 10000)
     }
 }

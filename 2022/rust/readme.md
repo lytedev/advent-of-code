@@ -5,6 +5,14 @@ really enjoyed the tooling. I intent to do more with Rust this year than
 last and aim for good performance (without bending over too far backwards,
 anyways...)
 
+## Competing
+
+I compete very lightly. I use [my `at` script][at] like `at 2022-12-02 && ./
+fetch_input.sh 2` to fetch input as soon as it's available and I use `watchexec
+-e rs 'C; clear; cargo test --bin day2 && cargo run --bin day2'` to run my
+file(s) as I edit them.
+
+
 ## Running
 
 First, you will want to fetch your input for the day you want to run. You will
@@ -37,3 +45,5 @@ For speeeeeed!
 cargo build --release --bin day1
 time ./target/release/day1
 ```
+
+[at]: https://git.lyte.dev/lytedev/dotfiles/src/branch/master/common/bin/at
