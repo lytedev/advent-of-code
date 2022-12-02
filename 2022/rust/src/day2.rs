@@ -1,12 +1,64 @@
+use std::cmp::{Ord, Ordering, PartialEq};
+use std::str::FromStr;
+
 mod common;
 
-// A -> Rock
-// B -> Paper
-// C -> Scissors
+#[derive(Debug, PartialEq, Eq)]
+enum Choice {
+    Rock = 1,
+    Paper = 2,
+    Scissors = 3,
+}
 
-// X -> Rock -> 1
-// Y -> Paper -> 2
-// Z -> Scissors -> 3
+impl PartialOrd for Choice {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Choice {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self {
+            Choice::Rock => match other {
+                Choice::Rock => Ordering::Equal,
+                Choice::Paper => Ordering::Less,
+                Choice::Scissors => Ordering::Greater,
+            },
+            Choice::Paper => match other {
+                Choice::Rock => Ordering::Greater,
+                Choice::Paper => Ordering::Equal,
+                Choice::Scissors => Ordering::Less,
+            },
+            Choice::Scissors => match other {
+                Choice::Rock => Ordering::Less,
+                Choice::Paper => Ordering::Greater,
+                Choice::Scissors => Ordering::Equal,
+            },
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ParseChoiceError;
+
+impl std::fmt::Display for ParseChoiceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl FromStr for Choice {
+    type Err = ParseChoiceError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.chars().nth(0) {
+            Some('X') | Some('A') => Ok(Choice::Rock),
+            Some('Y') | Some('B') => Ok(Choice::Paper),
+            Some('Z') | Some('C') => Ok(Choice::Scissors),
+            _ => Err(ParseChoiceError),
+        }
+    }
+}
 
 fn main() {
     let input = common::day_input(2);
@@ -14,84 +66,68 @@ fn main() {
     println!("Part 2: {}", part2(&input));
 }
 
-fn rps(a: char, b: char) -> i32 {
-    match b {
-        'X' => {
-            1 + match a {
-                'A' => 3,
-                'B' => 0,
-                'C' => 6,
-                _ => 1000000,
-            }
+fn score_part1(opponent: &Choice, mine: &Choice) -> i32 {
+    (*mine as i32)
+        + match mine.cmp(opponent) {
+            Ordering::Less => 0,
+            Ordering::Equal => 3,
+            Ordering::Greater => 6,
         }
-        'Y' => {
-            2 + match a {
-                'A' => 6,
-                'B' => 3,
-                'C' => 0,
-                _ => 1000000,
-            }
-        }
-        'Z' => {
-            3 + match a {
-                'A' => 0,
-                'B' => 6,
-                'C' => 3,
-                _ => 1000000,
-            }
-        }
-        _ => 1000000,
-    }
 }
 
 fn part1(input: &str) -> i32 {
-    input
-        .lines()
-        .map(|s| {
-            let mut c = s.chars();
-            rps(c.nth(0).unwrap(), c.nth(1).unwrap())
-        })
-        .sum()
+    input.lines().fold(0, |points, line| {
+        points
+            + score_part1(
+                &line[0..1].parse::<Choice>().unwrap(),
+                &line[2..3].parse::<Choice>().unwrap(),
+            )
+    })
 }
 
-fn rps2(a: char, b: char) -> i32 {
-    match b {
-        'X' => {
-            0 + match a {
-                'A' => 3,
-                'B' => 1,
-                'C' => 2,
-                _ => 1000000,
-            }
-        }
-        'Y' => {
-            3 + match a {
-                'A' => 1,
-                'B' => 2,
-                'C' => 3,
-                _ => 1000000,
-            }
-        }
-        'Z' => {
-            6 + match a {
-                'A' => 2,
-                'B' => 3,
-                'C' => 1,
-                _ => 1000000,
-            }
-        }
-        _ => 1000000,
+#[derive(Debug)]
+struct ParseOrderingError;
+
+fn desired_outcome(s: &str) -> Result<Ordering, ParseOrderingError> {
+    match s.chars().nth(0) {
+        Some('X') => Ok(Ordering::Less),
+        Some('Y') => Ok(Ordering::Equal),
+        Some('Z') => Ok(Ordering::Greater),
+        _ => Err(ParseOrderingError),
     }
 }
 
+fn outcome_choice(opponent: &Choice, desired_outcome: Ordering) -> Choice {
+    match opponent {
+        Choice::Rock => match desired_outcome {
+            Ordering::Equal => Choice::Rock,
+            Ordering::Greater => Choice::Paper,
+            Ordering::Less => Choice::Scissors,
+        },
+        Choice::Paper => match desired_outcome {
+            Ordering::Less => Choice::Rock,
+            Ordering::Equal => Choice::Paper,
+            Ordering::Greater => Choice::Scissors,
+        },
+        Choice::Scissors => match desired_outcome {
+            Ordering::Greater => Choice::Rock,
+            Ordering::Less => Choice::Paper,
+            Ordering::Equal => Choice::Scissors,
+        },
+    }
+}
+
+fn score_part2(opponent: &Choice, outcome: &str) -> i32 {
+    score_part1(
+        &opponent,
+        &outcome_choice(&opponent, desired_outcome(outcome).unwrap()),
+    )
+}
+
 fn part2(input: &str) -> i32 {
-    input
-        .lines()
-        .map(|s| {
-            let mut c = s.chars();
-            rps2(c.nth(0).unwrap(), c.nth(1).unwrap())
-        })
-        .sum()
+    input.lines().fold(0, |points, line| {
+        points + score_part2(&line[0..1].parse::<Choice>().unwrap(), &line[2..3])
+    })
 }
 
 #[cfg(test)]
