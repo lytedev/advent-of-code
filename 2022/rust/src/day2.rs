@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 mod common;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Choice {
     Rock = 1,
     Paper = 2,
