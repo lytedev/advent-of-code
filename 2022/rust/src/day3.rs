@@ -9,50 +9,38 @@ fn main() {
     println!("Part 2: {}", part2(&input));
 }
 
+fn priority(b: u8) -> i32 {
+    (b as i32) - if b >= 97 && b <= 122 { 96 } else { 38 }
+}
+
 fn part1(input: &str) -> i32 {
-    let mut r = 0_i32;
-    for l in input.lines() {
-        println!("{}", l);
-        let mut s: HashSet<u8> = HashSet::new();
-        let bytes = l.as_bytes();
-        let mut n = 0;
-        let bar = bytes.len() / 2;
-        println!("{}", bar);
-        for b in bytes {
-            print!("{}.", b);
-            if s.contains(b) && n >= bar {
-                if *b >= 97 && *b <= 122 {
-                    r += (*b as i32) - 96;
-                } else {
-                    r += (*b as i32) - 65 + 27;
-                }
-                println!(" == {}", r);
-                break;
-            } else if n < bar {
-                s.insert(*b);
-            }
-            n += 1
-        }
-    }
-    r
+    input.lines().map(str::as_bytes).fold(0, |r, b| {
+        let h = b.len() / 2;
+        r + priority(
+            *HashSet::<u8>::from_iter((&b[0..h]).iter().cloned())
+                .intersection(&HashSet::from_iter((&b[h..b.len()]).iter().cloned()))
+                .next()
+                .unwrap(),
+        )
+    })
 }
 
 fn part2(input: &str) -> i32 {
-    let mut r = 0_i32;
-    for t in input.lines().collect::<Vec<&str>>().chunks_exact(3) {
-        let a: HashSet<u8> = HashSet::from_iter(t[0].bytes());
-        let b: HashSet<u8> = HashSet::from_iter(t[1].bytes());
-        let c: HashSet<u8> = HashSet::from_iter(t[2].bytes());
-        let ab = HashSet::from_iter(a.intersection(&b).cloned());
-        let b = ab.intersection(&c).next().unwrap();
-        if *b >= 97 && *b <= 122 {
-            r += (*b as i32) - 96;
-        } else {
-            r += (*b as i32) - 65 + 27;
-        }
-        println!("+{} = {}", b, r);
-    }
-    r
+    input
+        .lines()
+        .collect::<Vec<&str>>()
+        .chunks_exact(3)
+        .fold(0, |r, t| {
+            r + priority(
+                *t.iter()
+                    .map(|l| HashSet::<u8>::from_iter(l.bytes()))
+                    .reduce(|a, b| HashSet::from_iter(a.intersection(&b).cloned()))
+                    .unwrap()
+                    .iter()
+                    .next()
+                    .unwrap(),
+            )
+        })
 }
 
 #[cfg(test)]

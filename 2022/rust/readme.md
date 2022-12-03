@@ -12,7 +12,6 @@ fetch_input.sh 2` to fetch input as soon as it's available and I use `watchexec
 -e rs 'C; clear; cargo test --bin day2 && cargo run --bin day2'` to run my
 file(s) as I edit them.
 
-
 ## Running
 
 First, you will want to fetch your input for the day you want to run. You will
@@ -44,6 +43,16 @@ For speeeeeed!
 ```bash
 cargo build --release --bin day1
 time ./target/release/day1
+```
+
+### Everything
+
+You can use this `fish` script to build all binaries in release mode and run/
+time them all:
+
+```fish
+cargo build --release --bins
+for f in (fd 'day.' target/release/ --type executable --max-depth 1); echo $f; time $f; end
 ```
 
 [at]: https://git.lyte.dev/lytedev/dotfiles/src/branch/master/common/bin/at
