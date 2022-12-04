@@ -8,8 +8,7 @@ fn main() {
 
 fn nums(input: &str) -> Vec<i32> {
     input
-        .replace(",", "-")
-        .split("-")
+        .split(&['-', ','])
         .map(|s| s.parse::<i32>().unwrap())
         .collect()
 }
