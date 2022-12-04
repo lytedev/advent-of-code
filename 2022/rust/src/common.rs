@@ -15,3 +15,6 @@ pub fn show_answers(answer1: &impl Debug, answer2: &impl Debug) {
     println!("Part 1: {:?}", answer1);
     println!("Part 2: {:?}", answer2);
 }
+pub fn show_both_answers((a, b): &(impl Debug, impl Debug)) {
+    show_answers(a, b)
+}
