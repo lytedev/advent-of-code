@@ -10,7 +10,7 @@ fn processed_input(input: &str) -> Vec<Vec<i32>> {
 fn both_parts(input: &Vec<Vec<i32>>) -> (usize, usize) {
     input.iter().fold((0, 0), |(a, b), n| {
         (
-            (a + ((n[0] <= n[2] && n[1] >= n[3]) || (n[2] <= n[0] && n[3] >= n[1])) as usize),
+            a + (((n[0] <= n[2] && n[1] >= n[3]) || (n[2] <= n[0] && n[3] >= n[1])) as usize),
             b + ((n[0] <= n[3] && n[2] <= n[1]) as usize),
         )
     })
