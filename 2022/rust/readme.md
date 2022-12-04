@@ -52,7 +52,7 @@ time them all:
 
 ```fish
 cargo build --release --bins
-for f in (fd 'day.' target/release/ --type executable --max-depth 1); echo $f; time $f; end
+time for f in (fd 'day.' target/release/ --type executable --max-depth 1); echo $f; time $f; end
 ```
 
 [at]: https://git.lyte.dev/lytedev/dotfiles/src/branch/master/common/bin/at

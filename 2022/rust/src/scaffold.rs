@@ -1,5 +1,7 @@
 mod common;
 
+type Input = &str;
+
 fn main() {
     let input = common::day_input(panic!("PUT THE CORRECT DAY NUMBER HERE"));
     println!("Part 1: {}", part1(&input));
