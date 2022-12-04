@@ -11,10 +11,13 @@ pub fn day_input(day: u8) -> String {
     fs::read_to_string(file_path).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn show_answers(answer1: &impl Debug, answer2: &impl Debug) {
     println!("Part 1: {:?}", answer1);
     println!("Part 2: {:?}", answer2);
 }
+
+#[allow(dead_code)]
 pub fn show_both_answers((a, b): &(impl Debug, impl Debug)) {
     show_answers(a, b)
 }
