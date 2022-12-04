@@ -8,7 +8,7 @@ fn processed_input(input: &str) -> Input {
 }
 
 fn part1(input: &Input) -> Result {
-    0
+    100
 }
 
 fn part2(input: &Input) -> Result {
@@ -16,9 +16,11 @@ fn part2(input: &Input) -> Result {
 }
 
 fn main() {
-    let input = processed_input(&common::day_input(panic!(
+    let input_text = common::day_input(panic!(
         "PUT THE CORRECT DAY NUMBER HERE AND ADD bin TO Cargo.toml"
-    )));
+    ));
+    eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
+    let input = processed_input(&input_text);
     common::show_answers(&part1(&input), &part2(&input))
     // common::show_both_answers(&both_parts(&input))
 }

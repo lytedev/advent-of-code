@@ -15,7 +15,8 @@ url="https://adventofcode.com/$AOC_YEAR/day/$DAY/input"
 cookie="$(cat "$HOME/.advent-of-code-session-cookie")"
 mkdir -p "$(dirname "$f")"
 if curl --fail-with-body -X GET "$url" -H "Cookie:$cookie" > "$f"; then
-  echo "Downloaded $url to $f"
+  cat "$f"
+  echo "Downloaded $url to $f - contents have been output to this terminal as well"
   exit 0
 else
   echo "Error: curl failed"
