@@ -38,5 +38,6 @@ mod tests {
         let input = processed_input(TEST_INPUT);
         assert_eq!(part1(&input), 0);
         assert_eq!(part2(&input), 0);
+        // assert_eq!(both_parts(&input), (0, 0));
     }
 }
