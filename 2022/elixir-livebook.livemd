@@ -4,7 +4,7 @@
 
 ```elixir
 defmodule AoC do
-  def input_file_contents(n), do: File.read!(Path.expand("~/.cache/aoc2022/#{n}.input"))
+  def input_file_contents(n), do: File.read!(Path.expand("/aoc-input/#{n}.input"))
 end
 
 import Enum
@@ -84,4 +84,56 @@ Part 2: 15457
 
 ```
 :ok
+```
+
+## Day 3
+
+```elixir
+priority = fn
+  n when n >= 97 and n <= 122 -> n - 96
+  n -> n - 38
+end
+
+lines =
+  3
+  |> AoC.input_file_contents()
+  |> String.split("\n", trim: true)
+
+lines
+|> map(fn s ->
+  <<a::binary-size(div(byte_size(s), 2)), b::binary>> = s
+
+  MapSet.new(to_charlist(a))
+  |> MapSet.intersection(MapSet.new(to_charlist(b)))
+  |> MapSet.to_list()
+  |> hd()
+  |> priority.()
+end)
+|> sum()
+|> IO.inspect()
+
+lines
+|> chunk_every(3)
+|> map(fn t ->
+  map(t, &(to_charlist(&1) |> MapSet.new()))
+  |> reduce(&MapSet.intersection/2)
+  |> MapSet.to_list()
+  |> hd()
+  |> priority.()
+end)
+|> sum()
+|> IO.inspect()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+7597
+2607
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+2607
 ```
