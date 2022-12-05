@@ -1,58 +1,54 @@
 mod common;
 
-#[derive(Debug)]
+#[derive(Clone)]
 struct Move {
     amount: i32,
     from: usize,
     to: usize,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 struct Crates {
     stacks: Vec<Vec<char>>,
     moves: Vec<Move>,
 }
 
-const NUM_STACKS: usize = 9;
-
 type Input = Crates;
 type Result = String;
 
 fn processed_input(input: &str) -> Input {
-    let mut stacks: Vec<Vec<char>> = vec![];
     let mut moves: Vec<Move> = vec![];
 
-    for _ in 0..NUM_STACKS {
-        stacks.push(vec![]);
-    }
+    // scan for the line that denotes the stack numbers (it's the line that starts with " 1")
+    let stacks_index = input.find("\n 1").unwrap() + 1;
+    let first_slice = &input[stacks_index..];
+    // calculate the number of stacks based on the length of that line
+    // we do this by subtracting 3 (" 1 ") and then dividing by 4 ("  2 ", "  3 ", ... "  9 ")
+    // the last stack number includes the trailing space, so this math holds up
+    let end_head_index = first_slice.find('\n').unwrap();
+    let num_stacks = ((&first_slice[0..end_head_index].len() - 3) / 4) + 1;
+    let mut stacks: Vec<Vec<char>> = (0..num_stacks).map(|_| vec![]).collect();
 
-    let mut parsing_stacks = true;
-    for l in input.lines() {
-        if l.trim() == "" || l.chars().skip(1).next().unwrap() == '1' {
-            parsing_stacks = false;
-            continue;
-        } else if parsing_stacks {
-            let mut x = 0;
-            for c in l.chars().skip(1).step_by(4) {
-                x += 1;
-                if c == ' ' {
-                    continue;
-                }
-                stacks[x - 1].push(c);
+    // parse the stacks from the bottom up
+    for l in input[0..stacks_index].lines().rev() {
+        let mut x = 0;
+        for c in l.chars().skip(1).step_by(4) {
+            x += 1;
+            if c == ' ' {
+                continue;
             }
-        } else {
-            let words: Vec<&str> = l.split_whitespace().collect();
-            println!("words: {:?}", words);
-            moves.push(Move {
-                amount: words[1].parse().unwrap(),
-                from: words[3].parse::<usize>().unwrap() - 1,
-                to: words[5].parse::<usize>().unwrap() - 1,
-            })
+            stacks[x - 1].push(c);
         }
     }
 
-    for s in &mut stacks[..] {
-        s.reverse();
+    // parse the moves
+    for l in input[stacks_index + end_head_index + 2..].lines() {
+        let words: Vec<&str> = l.split_whitespace().collect();
+        moves.push(Move {
+            amount: words[1].parse().unwrap(),
+            from: words[3].parse::<usize>().unwrap() - 1,
+            to: words[5].parse::<usize>().unwrap() - 1,
+        })
     }
 
     Crates { stacks, moves }
@@ -61,62 +57,53 @@ fn processed_input(input: &str) -> Input {
 fn perform_moves(crates: &mut Crates) {
     let stacks = &mut crates.stacks;
     for Move { amount, from, to } in &crates.moves {
-        println!("move: {} {} {}", amount, from, to);
         for _ in 0..*amount {
             let popped = stacks[*from].pop().unwrap();
             stacks[*to].push(popped);
         }
-        println!("{:?}", stacks);
     }
 }
 
 fn part1(input: &mut Input) -> Result {
-    println!("{:?}", input);
     perform_moves(input);
 
-    let mut r = String::from("");
-    for s in &input.stacks {
-        r.push(s.last().unwrap_or(&' ').clone())
-    }
-    r.trim().to_string()
+    input
+        .stacks
+        .iter()
+        .map(|s| s.last().unwrap_or(&' ').clone())
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 fn perform_moves2(crates: &mut Crates) {
     let stacks = &mut crates.stacks;
     for Move { amount, from, to } in &crates.moves {
-        println!("move: {} {} {}", amount, from, to);
-        let l = stacks[*from].len();
-        println!("len: {:?}", l);
-        let ra = l - (*amount as usize)..l;
-        let mut popped: Vec<char> = stacks[*from].splice(ra, vec![]).collect();
+        let f = &mut stacks[*from];
+        let ra = (f.len() - (*amount as usize))..;
+        let mut popped: Vec<char> = f.splice(ra, vec![]).collect();
         stacks[*to].append(&mut popped);
-        println!("{:?}", stacks);
     }
 }
 
 fn part2(input: &mut Input) -> Result {
-    println!("{:?}", input);
     perform_moves2(input);
 
-    let mut r = String::from("");
-    for s in &input.stacks {
-        r.push(s.last().unwrap_or(&' ').clone())
-    }
-    r.trim().to_string()
+    input
+        .stacks
+        .iter()
+        .map(|s| s.last().unwrap_or(&' ').clone())
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 fn main() {
     let input_text = common::day_input(5);
-    eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let mut input = processed_input(&input_text);
-    let mut input2 = processed_input(&input_text);
+    let mut input2 = input.clone();
     common::show_answers(&part1(&mut input), &part2(&mut input2))
-    // common::show_both_answers(&both_parts(&input))
 }
-
-// fn both_parts(input: &Input) -> (Result, Result) {
-//     (0, 0)
-// }
 
 #[cfg(test)]
 mod tests {
@@ -135,9 +122,8 @@ move 1 from 1 to 2";
     #[test]
     fn test() {
         let mut input = processed_input(TEST_INPUT);
+        let mut input2 = input.clone();
         assert_eq!(part1(&mut input), "CMZ");
-        let mut input = processed_input(TEST_INPUT);
-        assert_eq!(part2(&mut input), "MCD");
-        // assert_eq!(both_parts(&input), (0, 0));
+        assert_eq!(part2(&mut input2), "MCD");
     }
 }
