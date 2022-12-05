@@ -81,15 +81,36 @@ fn part1(input: &mut Input) -> Result {
     r.trim().to_string()
 }
 
-fn part2(input: &Input) -> Result {
-    "".to_string()
+fn perform_moves2(crates: &mut Crates) {
+    let stacks = &mut crates.stacks;
+    for Move { amount, from, to } in &crates.moves {
+        println!("move: {} {} {}", amount, from, to);
+        let l = stacks[*from].len();
+        println!("len: {:?}", l);
+        let ra = l - (*amount as usize)..l;
+        let mut popped: Vec<char> = stacks[*from].splice(ra, vec![]).collect();
+        stacks[*to].append(&mut popped);
+        println!("{:?}", stacks);
+    }
+}
+
+fn part2(input: &mut Input) -> Result {
+    println!("{:?}", input);
+    perform_moves2(input);
+
+    let mut r = String::from("");
+    for s in &input.stacks {
+        r.push(s.last().unwrap_or(&' ').clone())
+    }
+    r.trim().to_string()
 }
 
 fn main() {
     let input_text = common::day_input(5);
     eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let mut input = processed_input(&input_text);
-    common::show_answers(&part1(&mut input), &part2(&input))
+    let mut input2 = processed_input(&input_text);
+    common::show_answers(&part1(&mut input), &part2(&mut input2))
     // common::show_both_answers(&both_parts(&input))
 }
 
@@ -116,7 +137,7 @@ move 1 from 1 to 2";
         let mut input = processed_input(TEST_INPUT);
         assert_eq!(part1(&mut input), "CMZ");
         let mut input = processed_input(TEST_INPUT);
-        assert_eq!(part2(&input), "");
+        assert_eq!(part2(&mut input), "MCD");
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
