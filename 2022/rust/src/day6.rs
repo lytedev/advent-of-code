@@ -2,12 +2,8 @@ mod common;
 
 use std::collections::HashSet;
 
-type Input = String;
+type Input = str;
 type Result = usize;
-
-fn processed_input(input: &str) -> Input {
-    input.to_owned()
-}
 
 fn part1(input: &Input) -> Result {
     let c: Vec<char> = input.chars().collect();
@@ -28,8 +24,6 @@ fn part1(input: &Input) -> Result {
 
 fn part2(input: &Input) -> Result {
     let c: Vec<char> = input.chars().collect();
-    println!("{} {}", 88, c.len());
-
     for i in 13..c.len() {
         let mut s: HashSet<char> = HashSet::new();
         for j in i - 13..=i {
@@ -45,15 +39,8 @@ fn part2(input: &Input) -> Result {
 
 fn main() {
     let input_text = common::day_input(6);
-    let input = processed_input(&input_text);
-    let input2 = processed_input(&input_text);
-    common::show_answers(&part1(&input), &part2(&input2))
-    // common::show_both_answers(&both_parts(&input))
+    common::show_answers(&part1(&input_text), &part2(&input_text))
 }
-
-// fn both_parts(input: &Input) -> (Result, Result) {
-//     (0, 0)
-// }
 
 #[cfg(test)]
 mod tests {
@@ -63,10 +50,8 @@ mod tests {
 
     #[test]
     fn test() {
-        // let input = processed_input(TEST_INPUT);
-        // assert_eq!(part1(&input), 7);
-        let input = processed_input(TEST_INPUT);
-        assert_eq!(part2(&input), 19);
-        // assert_eq!(both_parts(&input), (0, 0));
+        let input = TEST_INPUT;
+        assert_eq!(part1(input), 7);
+        assert_eq!(part2(input), 19);
     }
 }
