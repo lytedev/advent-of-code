@@ -26,8 +26,9 @@ fn part1(c: &Input) -> Result {
 }
 
 fn part2(c: &Input) -> Result {
+    let mut s: HashSet<char> = HashSet::with_capacity(14);
     for i in 13..c.len() {
-        let mut s: HashSet<char> = HashSet::new();
+        s.clear();
         for j in i - 13..=i {
             s.insert(c[j]);
         }
