@@ -23,33 +23,6 @@ impl DirTree {
     pub fn root() -> Self {
         Self::new(None)
     }
-
-    pub fn size(&self) -> usize {
-        self.files.values().sum::<usize>()
-            + self
-                .subdirectories
-                .values()
-                .map(|v| v.borrow().size())
-                .sum::<usize>()
-    }
-}
-
-struct DirTreeIterator {
-    dir_tree: Rc<RefCell<DirTree>>,
-}
-
-impl IntoIterator for DirTree {
-    type Item = Rc<RefCell<DirTree>>;
-    type IntoIter = std::iter::Chain<
-        std::iter::Once<Rc<RefCell<DirTree>>>,
-        std::collections::hash_map::Values<String, Rc<RefCell<DirTree>>>,
-    >;
-
-    fn into_iter(&self) -> Self::IntoIter {
-        std::iter::once(Rc::new(RefCell::new(*self)))
-            .into_iter()
-            .chain(self.subdirectories.values().into_iter())
-    }
 }
 
 type Input = Rc<RefCell<DirTree>>;
@@ -87,8 +60,28 @@ fn processed_input(input: &str) -> Input {
     return root;
 }
 
+const PART1_LIMIT: usize = 100_000;
+
+fn dfs1(input: Input, acc: usize) -> usize {
+    let dt = input.borrow();
+
+    let subdir_sizes = dt.subdirectories.values().map(|sdt| dfs1(sdt.clone(), acc));
+    let file_sizes = dt.files.values().map(|r| r.to_owned());
+
+    let this_dir_size = subdir_sizes.clone().chain(file_sizes).sum::<usize>();
+
+    let new_acc = acc + subdir_sizes.filter(|sd| *sd < PART1_LIMIT).sum::<usize>();
+    if this_dir_size < PART1_LIMIT {
+        return new_acc + this_dir_size;
+    } else {
+        return new_acc;
+    }
+}
+
 fn part1(input: &Input) -> Result {
-    100
+    let r = dfs1(input.clone(), 0);
+    println!("{} /", r);
+    r
 }
 
 fn part2(input: &Input) -> Result {
