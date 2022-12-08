@@ -21,30 +21,18 @@ fn part1(input: &Input) -> Result {
     let mut trees: HashSet<(usize, usize)> = HashSet::new();
 
     let mut add = |y, x| {
-        println!(
-            "tree @ row {}, col {} ({})",
-            y,
-            x,
-            (&input[y] as &Vec<u8>)[x]
-        );
         trees.insert((y, x));
     };
 
     let h = input.len();
     let w = input[0].len();
-    println!("width: {}, height: {}", w, h);
 
     for y in 1..=h - 2 {
         let row = &input[y];
         let mut tallest_left = row[0];
         let mut tallest_right = row[w - 1];
-        println!(
-            "scan left-to-right at row {} (tl: {}, tr: {})",
-            y, tallest_left, tallest_right
-        );
         let mut xd = 1;
         while xd < w - 1 {
-            println!("{},{}", y, xd);
             if row[xd] > tallest_left {
                 tallest_left = row[xd];
                 add(y, xd);
@@ -61,13 +49,8 @@ fn part1(input: &Input) -> Result {
     for x in 1..=w - 2 {
         let mut tallest_top = input[0][x];
         let mut tallest_bottom = input[h - 1][x];
-        println!(
-            "scan top-to-bottom at column {} (tt: {}, tb: {})",
-            x, tallest_top, tallest_bottom
-        );
         let mut yd = 1;
         while yd < h - 1 {
-            println!("{},{}", yd, x);
             if input[yd][x] > tallest_top {
                 tallest_top = input[yd][x];
                 add(yd, x);
@@ -81,13 +64,53 @@ fn part1(input: &Input) -> Result {
         }
     }
 
-    println!("{:?}", trees);
-
     trees.len() + (2 * (h - 1)) + (2 * (w - 1))
 }
 
 fn part2(input: &Input) -> Result {
-    0
+    // 29155 is too low
+    let dh = input.len();
+    let dw = input[0].len();
+    let mut best = 0;
+    println!("width: {}, height: {}", dw, dh);
+    for x in 1..dw - 1 {
+        for y in 1..dh - 1 {
+            println!("y: {}, x: {}", y, x);
+            let mut score = 1;
+            let h = input[y][x];
+            for lx in (0..x).rev() {
+                if input[y][lx] >= h || lx == 0 {
+                    println!("left: {}", x - lx);
+                    score = score * (x - lx);
+                    break;
+                }
+            }
+            for ty in (0..y).rev() {
+                if input[ty][x] >= h || ty == 0 {
+                    println!("top: {}", y - ty);
+                    score = score * (y - ty);
+                    break;
+                }
+            }
+            for rx in x + 1..dw {
+                if input[y][rx] >= h || rx == (dw - 1) {
+                    println!("right: {}", rx - x);
+                    score = score * (rx - x);
+                    break;
+                }
+            }
+            for by in y + 1..dh {
+                if input[by][x] >= h || by == (dh - 1) {
+                    println!("bottom: {}", by - y);
+                    score = score * (by - y);
+                    break;
+                }
+            }
+            println!("y: {}, x: {}, score: {}", y, x, score);
+            best = score.max(best)
+        }
+    }
+    return best;
 }
 
 fn main() {
@@ -118,7 +141,7 @@ mod tests {
     fn test() {
         let input = processed_input(TEST_INPUT);
         assert_eq!(part1(&input), 21);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 8);
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
