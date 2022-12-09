@@ -41,7 +41,6 @@ fn both_parts(input: &Input) -> (Answer, Answer) {
     let mut r: Vec<(i32, i32)> = repeat((0, 0)).take(10).collect();
 
     for i in input {
-        println!("line: {:?}", i);
         if let Some((x, y)) = match i.0 {
             'L' => Some((-1, 0)),
             'R' => Some((1, 0)),
@@ -49,7 +48,6 @@ fn both_parts(input: &Input) -> (Answer, Answer) {
             'D' => Some((0, 1)),
             _ => None,
         } {
-            println!("r: {:?}", r);
             for _ in 0..i.1 {
                 h = (h.0 + x, h.1 + y);
                 t = follow(h, t);
@@ -57,7 +55,6 @@ fn both_parts(input: &Input) -> (Answer, Answer) {
 
                 r[0] = (r[0].0 + x, r[0].1 + y);
                 for s in 1..r.len() {
-                    println!("s: {}", s);
                     r[s] = follow(r[s - 1], r[s]);
                 }
                 p2.insert(r[r.len() - 1]);
