@@ -1,17 +1,17 @@
 mod common;
 
 type Input = String;
-type Result = usize;
+type Answer = usize;
 
 fn processed_input(input: &str) -> Input {
     input.to_owned()
 }
 
-fn part1(input: &Input) -> Result {
+fn part1(input: &Input) -> Answer {
     100
 }
 
-fn part2(input: &Input) -> Result {
+fn part2(input: &Input) -> Answer {
     0
 }
 
@@ -25,7 +25,7 @@ fn main() {
     // common::show_both_answers(&both_parts(&input))
 }
 
-// fn both_parts(input: &Input) -> (Result, Result) {
+// fn both_parts(input: &Input) -> (Answer, Answer) {
 //     (0, 0)
 // }
 

@@ -1,6 +1,6 @@
 mod common;
 
-use std::collections::HashSet;
+use std::{collections::HashSet, iter::repeat};
 
 type Input = Vec<(char, i32)>;
 type Answer = usize;
@@ -18,94 +18,60 @@ fn processed_input(input: &str) -> Input {
         .collect()
 }
 
-fn part1(input: &Input) -> Answer {
-    let mut p: HashSet<(i32, i32)> = HashSet::new();
+fn follow((hx, hy): (i32, i32), (tx, ty): (i32, i32)) -> (i32, i32) {
+    let (dx, dy) = (tx.abs_diff(hx), ty.abs_diff(hy));
+    let (mx, my) = ((hx - tx) / 2, (hy - ty) / 2);
+    if dx > 1 && dy > 1 {
+        (tx + mx, ty + my)
+    } else if dx > 1 {
+        (tx + mx, hy)
+    } else if dy > 1 {
+        (hx, ty + my)
+    } else {
+        (tx, ty)
+    }
+}
+
+fn both_parts(input: &Input) -> (Answer, Answer) {
+    let mut p1: HashSet<(i32, i32)> = HashSet::new();
     let mut h: (i32, i32) = (0, 0);
     let mut t: (i32, i32) = (0, 0);
 
-    let mut m = |x, y, n| {
-        for _ in 0..n {
-            h.0 += x;
-            h.1 += y;
-            if t.0.abs_diff(h.0) > 1 && t.1.abs_diff(h.1) > 1 {
-                t.0 += (h.0 - t.0) / 2;
-                t.1 += (h.1 - t.1) / 2;
-            } else if t.0.abs_diff(h.0) > 1 {
-                t.0 += (h.0 - t.0) / 2;
-                t.1 = h.1;
-            } else if t.1.abs_diff(h.1) > 1 {
-                t.1 += (h.1 - t.1) / 2;
-                t.0 = h.0;
-            }
-            p.insert(t);
-            println!("h: ({}, {}), t: ({}, {})", h.0, h.1, t.0, t.1);
-        }
-    };
+    let mut p2: HashSet<(i32, i32)> = HashSet::new();
+    let mut r: Vec<(i32, i32)> = repeat((0, 0)).take(10).collect();
 
     for i in input {
-        println!("{:?}", i);
-        match i.0 {
-            'L' => m(-1, 0, i.1),
-            'R' => m(1, 0, i.1),
-            'U' => m(0, -1, i.1),
-            'D' => m(0, 1, i.1),
-            _ => (),
-        }
-    }
+        println!("line: {:?}", i);
+        if let Some((x, y)) = match i.0 {
+            'L' => Some((-1, 0)),
+            'R' => Some((1, 0)),
+            'U' => Some((0, -1)),
+            'D' => Some((0, 1)),
+            _ => None,
+        } {
+            println!("r: {:?}", r);
+            for _ in 0..i.1 {
+                h = (h.0 + x, h.1 + y);
+                t = follow(h, t);
+                p1.insert(t);
 
-    p.len()
-}
-
-fn part2(input: &Input) -> Answer {
-    let mut p: HashSet<(i32, i32)> = HashSet::new();
-    let mut r: Vec<(i32, i32)> = std::iter::repeat((0, 0)).take(10).collect();
-
-    let mut m = |x, y, n| {
-        for _ in 0..n {
-            r[0].0 += x;
-            r[0].1 += y;
-            for s in 1..r.len() {
-                if r[s].0.abs_diff(r[s - 1].0) > 1 && r[s].1.abs_diff(r[s - 1].1) > 1 {
-                    r[s].0 += (r[s - 1].0 - r[s].0) / 2;
-                    r[s].1 += (r[s - 1].1 - r[s].1) / 2;
-                } else if r[s].0.abs_diff(r[s - 1].0) > 1 {
-                    r[s].0 += (r[s - 1].0 - r[s].0) / 2;
-                    r[s].1 = r[s - 1].1;
-                } else if r[s].1.abs_diff(r[s - 1].1) > 1 {
-                    r[s].1 += (r[s - 1].1 - r[s].1) / 2;
-                    r[s].0 = r[s - 1].0;
+                r[0] = (r[0].0 + x, r[0].1 + y);
+                for s in 1..r.len() {
+                    println!("s: {}", s);
+                    r[s] = follow(r[s - 1], r[s]);
                 }
+                p2.insert(r[r.len() - 1]);
             }
-            p.insert(r[r.len() - 1]);
-            println!(
-                "h: ({}, {}), t: ({}, {})",
-                r[0].0,
-                r[0].1,
-                r[r.len() - 1].0,
-                r[r.len() - 1].1
-            );
-        }
-    };
-
-    for i in input {
-        println!("{:?}", i);
-        match i.0 {
-            'L' => m(-1, 0, i.1),
-            'R' => m(1, 0, i.1),
-            'U' => m(0, -1, i.1),
-            'D' => m(0, 1, i.1),
-            _ => (),
         }
     }
 
-    p.len()
+    (p1.len(), p2.len())
 }
 
 fn main() {
     let input_text = common::day_input(9);
-    eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let input = processed_input(&input_text);
-    common::show_answers(&part1(&input), &part2(&input))
+    common::show_both_answers(&both_parts(&input))
 }
 
 #[cfg(test)]
@@ -124,8 +90,7 @@ R 2";
     #[test]
     fn test() {
         let input = processed_input(TEST_INPUT);
-        assert_eq!(part1(&input), 13);
-        assert_eq!(part2(&input), 1);
+        assert_eq!(both_parts(&input), (13, 1));
     }
 
     const TEST_INPUT2: &str = "R 5
@@ -140,6 +105,6 @@ U 20";
     #[test]
     fn part2_test2() {
         let input2 = processed_input(TEST_INPUT2);
-        assert_eq!(part2(&input2), 36);
+        assert_eq!(both_parts(&input2), (88, 36));
     }
 }
