@@ -49,10 +49,12 @@ fn both_parts(input: &Input) -> (Answer, Answer) {
             _ => None,
         } {
             for _ in 0..i.1 {
+                // move part 1 head/tail
                 h = (h.0 + x, h.1 + y);
                 t = follow(h, t);
                 p1.insert(t);
 
+                // move part 2 rope
                 r[0] = (r[0].0 + x, r[0].1 + y);
                 for s in 1..r.len() {
                     r[s] = follow(r[s - 1], r[s]);
