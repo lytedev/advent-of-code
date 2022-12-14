@@ -21,8 +21,8 @@ fn part1(input: &Input) -> Result {
     let mut trees: HashSet<(usize, usize)> = HashSet::new();
 
     let mut add = |y, x| {
-        trees.insert((y, x));
-    };
+        trees.insert((y, x))
+    }
 
     let h = input.len();
     let w = input[0].len();
