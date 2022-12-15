@@ -58,7 +58,6 @@ const SAND_LOC: XY = (0, 0);
 fn fall_to_first_empty_or_void(map: &Map, void_height: i32) -> Result<XY, ()> {
     let (mut x, mut y) = (0, 0);
     while y < void_height {
-        println!("{}", y);
         let ny = y + 1;
         match [(x, ny), (x - 1, ny), (x + 1, ny)]
             .iter()
@@ -84,16 +83,30 @@ fn part1(input: &mut Input) -> Answer {
     result
 }
 
-fn part2(input: &Input) -> Answer {
-    0
+fn part2(input: &mut Input) -> Answer {
+    println!("{}", input.low_point);
+    let mut result = 0;
+    {
+        let y = input.low_point + 1;
+        for x in -1000..1000 {
+            input.map.insert((x, y), '#');
+        }
+    }
+    while input.map.get(&(0, 0)).is_none() {
+        let (x, y) = fall_to_first_empty_or_void(&input.map, input.low_point + 2).unwrap();
+        println!("sand at {}, {}", x, y);
+        input.map.insert((x, y), 'O');
+        result += 1;
+    }
+    result
 }
 
 fn main() {
     let input_text = common::day_input(14);
     eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let mut input = processed_input(&input_text);
-    let input2 = processed_input(&input_text);
-    common::show_answers(&part1(&mut input), &part2(&input2))
+    let mut input2 = processed_input(&input_text);
+    common::show_answers(&part1(&mut input), &part2(&mut input2))
     // common::show_both_answers(&both_parts(&input))
 }
 
@@ -112,8 +125,8 @@ mod tests {
     fn test() {
         let mut input = processed_input(TEST_INPUT);
         assert_eq!(part1(&mut input), 24);
-        let input2 = processed_input(TEST_INPUT);
-        assert_eq!(part2(&input2), 0);
+        let mut input2 = processed_input(TEST_INPUT);
+        assert_eq!(part2(&mut input2), 93);
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
