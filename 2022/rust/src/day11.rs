@@ -69,11 +69,11 @@ struct Monkey {
 }
 
 impl Monkey {
-    fn act(&mut self) -> Vec<(i64, usize)> {
+    fn act(&mut self, divisor: i64) -> Vec<(i64, usize)> {
         let mut result = vec![];
         while let Some(item) = self.items.pop() {
             self.num_inspections += 1;
-            let new_item = self.operator.apply(&self.operand, item) / 3;
+            let new_item = self.operator.apply(&self.operand, item) / divisor;
             if new_item % self.test_div.0 == 0 {
                 result.push((new_item, self.test_div.1));
             } else {
@@ -130,7 +130,7 @@ fn part1(input: &mut Input) -> Answer {
     for _round in 0..20 {
         for monkey_id in 0..input.len() {
             let monkey = &mut input[monkey_id];
-            let items_goto = monkey.act();
+            let items_goto = monkey.act(3);
             for (new_item, monkey_id) in items_goto {
                 input[monkey_id].items.push(new_item);
             }
@@ -145,15 +145,34 @@ fn part1(input: &mut Input) -> Answer {
     num_inspections.iter().rev().take(2).product()
 }
 
-fn part2(input: &Input) -> Answer {
-    0
+fn part2(input: &mut Input) -> Answer {
+    let monkey_cd = input.iter().map(|m| m.test_div.0).product::<i64>();
+    for _round in 0..10000 {
+        for monkey_id in 0..input.len() {
+            let monkey = &mut input[monkey_id];
+            let items_goto = monkey.act(1);
+            for (new_item, monkey_id) in items_goto {
+                let target_monkey = &mut input[monkey_id];
+                target_monkey.items.push(new_item % monkey_cd);
+            }
+        }
+    }
+
+    let mut num_inspections = input
+        .iter()
+        .map(|m| m.num_inspections)
+        .collect::<Vec<usize>>();
+    println!("{:?}", num_inspections);
+    num_inspections.sort();
+    num_inspections.iter().rev().take(2).product()
 }
 
 fn main() {
     let input_text = common::day_input(11);
     eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let mut input = processed_input(&input_text);
-    common::show_answers(&part1(&mut input), &part2(&input))
+    let mut input2 = processed_input(&input_text);
+    common::show_answers(&part1(&mut input), &part2(&mut input2))
     // common::show_both_answers(&both_parts(&input))
 }
 
@@ -197,8 +216,8 @@ Monkey 3:
     fn test() {
         let mut input = processed_input(TEST_INPUT);
         assert_eq!(part1(&mut input), 10605);
-        let input = processed_input(TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        let mut input = processed_input(TEST_INPUT);
+        assert_eq!(part2(&mut input), 2713310158);
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
