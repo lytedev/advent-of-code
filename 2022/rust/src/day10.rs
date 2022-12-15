@@ -53,36 +53,32 @@ fn part2(input: &Input) -> Answer2 {
     let w = 40;
     let mut crt = String::new();
     let mut x = 1;
-    let mut cycles = 0;
-    for i in input {
-        println!("{:?}", i);
-        let now_x = x.clone();
-        cycles += match i {
-            Instruction::Noop => 1,
-            Instruction::AddX(n) => {
-                x += n;
-                2
-            }
-        };
-
-        let mut pixel = '.';
+    let mut draw_pixel = |now_x| {
+        let mut pixel = ' ';
         if ((crt.len() % w) as i32).abs_diff(now_x) <= 1 {
             pixel = '#';
         }
         crt.push(pixel);
-        crt.push('#');
+    };
+    for i in input {
+        println!("{:?}", i);
+        let now_x = x.clone();
+        match i {
+            Instruction::Noop => draw_pixel(now_x),
+            Instruction::AddX(n) => {
+                draw_pixel(now_x);
+                draw_pixel(now_x);
+                x += n;
+            }
+        };
     }
 
     crt.chars()
         .enumerate()
         .flat_map(|(i, c)| {
-            if i > 0 && i % w == 0 {
-                Some('\n')
-            } else {
-                None
-            }
-            .into_iter()
-            .chain(std::iter::once(c))
+            if i % w == 0 { Some('\n') } else { None }
+                .into_iter()
+                .chain(std::iter::once(c))
         })
         .collect::<String>()
 }
@@ -256,12 +252,13 @@ noop";
         assert_eq!(part1(&input), 13140);
         assert_eq!(
             part2(&input),
-            "##..##..##..##..##..##..##..##..##..##..
+            "\n##..##..##..##..##..##..##..##..##..##..
 ###...###...###...###...###...###...###.
 ####....####....####....####....####....
 #####.....#####.....#####.....#####.....
 ######......######......######......####
 #######.......#######.......#######....."
+                .replace('.', " ")
         );
         // assert_eq!(both_parts(&input), (0, 0));
     }

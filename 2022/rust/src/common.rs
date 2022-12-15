@@ -1,5 +1,5 @@
 use std::env::var as envvar;
-use std::fmt::Debug;
+use std::fmt::Display;
 use std::fs;
 use std::path::Path;
 
@@ -20,12 +20,12 @@ pub fn day_input(day: u8) -> String {
 }
 
 #[allow(dead_code)]
-pub fn show_answers(answer1: &impl Debug, answer2: &impl Debug) {
-    println!("Part 1: {:?}", answer1);
-    println!("Part 2: {:?}", answer2);
+pub fn show_answers(answer1: &impl Display, answer2: &impl Display) {
+    println!("Part 1: {}", answer1);
+    println!("Part 2: {}", answer2);
 }
 
 #[allow(dead_code)]
-pub fn show_both_answers((a, b): &(impl Debug, impl Debug)) {
+pub fn show_both_answers((a, b): &(impl Display, impl Display)) {
     show_answers(a, b)
 }
