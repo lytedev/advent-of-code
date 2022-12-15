@@ -133,6 +133,8 @@ fn part2(input: Input) -> Answer {
     for y in 0..input.map.len() {
         for x in 0..input.map[y].len() {
             if input.map[y][x] == 0 {
+                // TODO: if you care in the future, this can be modified so we
+                // re-use our scoring graphs to find the shortest path from the end to some a
                 possible_starts.insert((y, x));
             }
         }
