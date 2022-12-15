@@ -136,7 +136,29 @@ fn part1(input: &Input) -> Answer {
 }
 
 fn part2(input: &Input) -> Answer {
-    0
+    let mut packets = vec![];
+    for pair in input {
+        packets.push(&pair.left);
+        packets.push(&pair.right);
+    }
+    let d1 = "[[2]]".parse::<Packet>().unwrap();
+    let d2 = "[[6]]".parse::<Packet>().unwrap();
+    packets.push(&d1);
+    packets.push(&d2);
+    packets.sort();
+    let mut di1 = 0;
+    let mut di2 = 0;
+    let mut i = 1;
+    for p in packets {
+        if p == &d1 {
+            di1 = i;
+        }
+        if p == &d2 {
+            di2 = i;
+        }
+        i += 1;
+    }
+    di1 * di2
 }
 
 fn main() {
@@ -195,7 +217,7 @@ mod tests {
         );
         let input = processed_input(TEST_INPUT);
         assert_eq!(part1(&input), 13);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 140);
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
