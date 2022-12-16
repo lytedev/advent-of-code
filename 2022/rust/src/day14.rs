@@ -87,7 +87,7 @@ fn part2(input: &mut Input) -> Answer {
     println!("{}", input.low_point);
     let mut result = 0;
     {
-        let y = input.low_point + 1;
+        let y = input.low_point + 2;
         for x in -1000..1000 {
             input.map.insert((x, y), '#');
         }
