@@ -12,7 +12,7 @@ type Input = Vec<Sensor>;
 type Answer = usize;
 
 fn taxi_dist(a: &XY, b: &XY) -> u64 {
-    a.0.abs_diff(b.0) + a.1.abs_diff(b.1) - 1
+    (a.0.abs_diff(b.0) + a.1.abs_diff(b.1)).saturating_sub(1)
 }
 
 fn processed_input(input: &str) -> Input {
@@ -77,7 +77,20 @@ fn part1(input: &Input, y: i64) -> Answer {
     unbeaconable_locs
 }
 
-fn part2(input: &Input) -> Answer {
+fn part2(input: &Input, max: i64) -> Answer {
+    let (minx, maxx) = (0, max);
+    for y in minx..=maxx {
+        'outer: for x in minx..=maxx {
+            println!("{},{}", x, y);
+            for s in input {
+                if taxi_dist(&s.pos, &(x, y)) <= s.taxi_dist_covered {
+                    continue 'outer;
+                }
+            }
+            return ((x * 4000000) + y) as usize;
+        }
+    }
+    println!("{:?}", input);
     0
 }
 
@@ -85,7 +98,7 @@ fn main() {
     let input_text = common::day_input(15);
     eprintln!("{}\n\nAbove is your input file.\n\n", input_text);
     let input = processed_input(&input_text);
-    common::show_answers(&part1(&input, 2000000), &part2(&input))
+    common::show_answers(&part1(&input, 2000000), &part2(&input, 4000000))
     // common::show_both_answers(&both_parts(&input))
 }
 
@@ -116,7 +129,7 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3";
     fn test() {
         let input = processed_input(TEST_INPUT);
         assert_eq!(part1(&input, 10), 26);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input, 20), 56000011);
         // assert_eq!(both_parts(&input), (0, 0));
     }
 }
