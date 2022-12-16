@@ -1,5 +1,7 @@
 mod common;
 
+use std::ops::Range;
+
 type XY = (i64, i64);
 #[derive(Debug)]
 struct Sensor {
@@ -61,7 +63,6 @@ fn part1(input: &Input, y: i64) -> Answer {
         }
     }
     let mut unbeaconable_locs = 0;
-    println!("{}..{}", minx, maxx);
     for x in minx..=maxx {
         for s in input {
             if (x, y) == s.nearest_beacon {
@@ -78,19 +79,32 @@ fn part1(input: &Input, y: i64) -> Answer {
 }
 
 fn part2(input: &Input, max: i64) -> Answer {
-    let (minx, maxx) = (0, max);
-    for y in minx..=maxx {
-        'outer: for x in minx..=maxx {
-            println!("{},{}", x, y);
-            for s in input {
-                if taxi_dist(&s.pos, &(x, y)) <= s.taxi_dist_covered {
-                    continue 'outer;
+    let (miny, maxy) = (0, max);
+    for y in miny..=maxy {
+        if y % 
+        let mut applicable_ranges = input
+            .iter()
+            .filter_map(|s| {
+                let delta_y = s.pos.1.abs_diff(y);
+                if delta_y > s.taxi_dist_covered {
+                    None
+                } else {
+                    let dx = (s.taxi_dist_covered - delta_y) as i64;
+                    Some(s.pos.0 - dx..(s.pos.0 + dx + 1))
                 }
+            })
+            .collect::<Vec<Range<i64>>>();
+        applicable_ranges.sort_by(|a, b| a.start.cmp(&b.start));
+        let mut disjoint_max = applicable_ranges[0].end;
+        for r in applicable_ranges {
+            if disjoint_max < r.start - 1 {
+                return (((disjoint_max + 1) * 4000000) + y) as usize;
             }
-            return ((x * 4000000) + y) as usize;
+            if r.end > disjoint_max {
+                disjoint_max = r.end;
+            }
         }
     }
-    println!("{:?}", input);
     0
 }
 
