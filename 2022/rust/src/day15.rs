@@ -81,7 +81,6 @@ fn part1(input: &Input, y: i64) -> Answer {
 fn part2(input: &Input, max: i64) -> Answer {
     let (miny, maxy) = (0, max);
     for y in miny..=maxy {
-        if y % 
         let mut applicable_ranges = input
             .iter()
             .filter_map(|s| {
